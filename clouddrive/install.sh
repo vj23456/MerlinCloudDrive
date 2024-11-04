@@ -146,7 +146,7 @@ install_now() {
 	# dbus value
 	echo_date "设置插件默认参数..."
 	dbus set clouddrive_version="${PLVER}"
-	dbus set clouddrive_binary="0.17.2"
+	dbus set clouddrive_binary="0.8.2"
 	dbus set softcenter_module_clouddrive_version="${PLVER}"
 	dbus set softcenter_module_clouddrive_install="1"
 	dbus set softcenter_module_clouddrive_name="${module}"

@@ -474,6 +474,14 @@ function monitorDropFile(dotnetRef, Element, callBack) {
 window.isMobileDevice = function () {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
+window.getItemsPerRow = function (containerId, itemWidth) {
+    var container = document.getElementById(containerId);
+    if (container) {
+        var containerWidth = container.clientWidth;
+        return Math.floor(containerWidth / itemWidth);
+    }
+    return 1;
+};
 function openEmailClient(email, subject, body) {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }

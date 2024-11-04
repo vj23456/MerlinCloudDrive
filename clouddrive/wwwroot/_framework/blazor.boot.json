@@ -1,7 +1,7 @@
 {
   "entryAssembly": "CloudDriveWasm",
   "resources": {
-    "hash": "sha256-WXin/raNzRPc2wFTGyRZYC60VopnlFsrlMC+3wqWv3k=",
+    "hash": "sha256-62w/2Iz6NEtzcdzkbr78SbUxK0bLJJ39MQxOW6Nh0UA=",
     "runtime": {
       "dotnet.7.0.20.j0ioli2e4j.js": "sha256-eaJTmow4t8eE7FZMZR5Ja41JMOefGCbIYDTdpclGsac=",
       "dotnet.timezones.blat": "sha256-gbATD5HDsHYtW8vdPYh9iSBY4O5CjvMeCSF5xXWF1xo=",
@@ -15,12 +15,12 @@
       "Blazored.LocalStorage.dll": "sha256-xcO4wZtFwM5I9DIZf1sZpOdcsaTjw1HyqJ5AWciMDAk=",
       "Blazored.Modal.dll": "sha256-OkL/zDQTP6kkz+pR8Lki2Pljk2hwf99nXDSmE1Id0cY=",
       "BlazorPagination.dll": "sha256-dMHq7CrMWeHn5R1pN72TRE/5YJfstWId26CDK9F0fKc=",
-      "CloudDriveWasm.dll": "sha256-OrACh9gLJZI8RU8wdh47OyQiieOzTn6Ays+ELbqOqhg=",
-      "Google.Protobuf.dll": "sha256-eTefVPxY/bJUh+0M7FyT5LY2tMlnW7MwECRBibjxT0A=",
-      "Grpc.Core.Api.dll": "sha256-K56LAj3q8XGkNiFwW4kDg6dLKvTINdrzMr8zvO6LPvI=",
-      "Grpc.Net.Client.dll": "sha256-opSBU+d9hg4emXmOTxsbUUFqLietGc42x5YfKqs1trI=",
-      "Grpc.Net.Client.Web.dll": "sha256-I/0q6jEZTC99i0AvwgFSx9tkljpPutPBcFC5C1CcZMw=",
-      "Grpc.Net.Common.dll": "sha256-TzYniMafOa3EZXMBgwf78zi69As9FPdjob+4qyQy0Ck=",
+      "CloudDriveWasm.dll": "sha256-4KnYchy1SS9k0TXqRa7Uh+y8wOWuq0Ghd9J+iFa6J6c=",
+      "Google.Protobuf.dll": "sha256-gVIaY0b36C3M1IQ3eSfP9209KDrvBhvEerNeZG3cwI0=",
+      "Grpc.Core.Api.dll": "sha256-q9Y1s0r5jpKX2K4kf2EdQwqADxNUHXsOuKX54WSmxDs=",
+      "Grpc.Net.Client.dll": "sha256-3tm+Ci3khzJ2rBAW6YytpMky7m/hm9B2dt9VCk6RXTg=",
+      "Grpc.Net.Client.Web.dll": "sha256-yh0RH9hC8uUXgE4xPE+fSrIoRM/nvkbnD++u/4csKM0=",
+      "Grpc.Net.Common.dll": "sha256-oibCcekaDqali5eWVJwdrBQJ1j8DCMHS1HRyJrVOHWY=",
       "Microsoft.AspNetCore.Components.dll": "sha256-jzK4PV8v5uv+PTRB9UdHUwg3s2SzYyOM3nb0N6Jwu7w=",
       "Microsoft.AspNetCore.Components.Forms.dll": "sha256-JcV21j0oJT9KUjV5SltucJjbluy1t1F6wnir1WQ46Nk=",
       "Microsoft.AspNetCore.Components.Web.dll": "sha256-DI69/XUzRWZ+/XzPJ1eDWxXOqWRT6h+Y9YVJ5GYU278=",
@@ -50,7 +50,7 @@
       "System.Collections.Immutable.dll": "sha256-ZuNhUDWbAWDE7/upJTHpibIPzntdl3V5YyNOJNx8jcw=",
       "System.Collections.NonGeneric.dll": "sha256-NYDm1ibhh9tfRHLL9Kh4pXGg+8KIUtnoq8nWvOrQQUo=",
       "System.Collections.Specialized.dll": "sha256-08AD793GFWD17CL7xLeETHaLDK/OXGTC9aATT7v8AIU=",
-      "System.ComponentModel.Annotations.dll": "sha256-IBCWJhUHCxiTqHx1VKY5cuJpu3BIH84CkngOn8CzgnE=",
+      "System.ComponentModel.Annotations.dll": "sha256-XCK6K8Xb/HsF/hy0zANEW48hd80X0OOG4vuooMg0vsU=",
       "System.ComponentModel.dll": "sha256-7vcDBo/3bcYI/CjzxGeFgD2a7r2TJ0a+atwSTcxZv/E=",
       "System.ComponentModel.Primitives.dll": "sha256-1i3oLwxLIWsQ/RrC5i57rxtv4//7ol4MmT2oipJhUtk=",
       "System.ComponentModel.TypeConverter.dll": "sha256-lsnFSqESvx2QsNrRekUAh/CmRe+tEUK4F6PW4qjemCQ=",
@@ -90,7 +90,7 @@
     },
     "satelliteResources": {
       "zh-CN": {
-        "zh-CN/CloudDriveWasm.resources.dll": "sha256-tDpDpdcBT8Q2aEUaxgEehVgiDZT9DHqaNqFFP+fp6GU="
+        "zh-CN/CloudDriveWasm.resources.dll": "sha256-rDFlQUDKXMfAufJb0Zqow9iCSWo+HsscYOKo4kR8scM="
       }
     },
     "runtimeAssets": {

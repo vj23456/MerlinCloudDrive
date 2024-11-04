@@ -29,7 +29,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-EvR0nYcgRt05kEbwx1TzBHEBNW9eMJom7ugjrMEs\/AE=",
+      "hash": "sha256-1WzWmzH3kuRLPisZ1s7jT23sLqDny2ugzVL\/wUZpikM=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -49,27 +49,27 @@
       "url": "_framework\/BlazorPagination.dll"
     },
     {
-      "hash": "sha256-OrACh9gLJZI8RU8wdh47OyQiieOzTn6Ays+ELbqOqhg=",
+      "hash": "sha256-4KnYchy1SS9k0TXqRa7Uh+y8wOWuq0Ghd9J+iFa6J6c=",
       "url": "_framework\/CloudDriveWasm.dll"
     },
     {
-      "hash": "sha256-eTefVPxY\/bJUh+0M7FyT5LY2tMlnW7MwECRBibjxT0A=",
+      "hash": "sha256-gVIaY0b36C3M1IQ3eSfP9209KDrvBhvEerNeZG3cwI0=",
       "url": "_framework\/Google.Protobuf.dll"
     },
     {
-      "hash": "sha256-K56LAj3q8XGkNiFwW4kDg6dLKvTINdrzMr8zvO6LPvI=",
+      "hash": "sha256-q9Y1s0r5jpKX2K4kf2EdQwqADxNUHXsOuKX54WSmxDs=",
       "url": "_framework\/Grpc.Core.Api.dll"
     },
     {
-      "hash": "sha256-opSBU+d9hg4emXmOTxsbUUFqLietGc42x5YfKqs1trI=",
+      "hash": "sha256-3tm+Ci3khzJ2rBAW6YytpMky7m\/hm9B2dt9VCk6RXTg=",
       "url": "_framework\/Grpc.Net.Client.dll"
     },
     {
-      "hash": "sha256-I\/0q6jEZTC99i0AvwgFSx9tkljpPutPBcFC5C1CcZMw=",
+      "hash": "sha256-yh0RH9hC8uUXgE4xPE+fSrIoRM\/nvkbnD++u\/4csKM0=",
       "url": "_framework\/Grpc.Net.Client.Web.dll"
     },
     {
-      "hash": "sha256-TzYniMafOa3EZXMBgwf78zi69As9FPdjob+4qyQy0Ck=",
+      "hash": "sha256-oibCcekaDqali5eWVJwdrBQJ1j8DCMHS1HRyJrVOHWY=",
       "url": "_framework\/Grpc.Net.Common.dll"
     },
     {
@@ -189,7 +189,7 @@
       "url": "_framework\/System.Collections.Specialized.dll"
     },
     {
-      "hash": "sha256-IBCWJhUHCxiTqHx1VKY5cuJpu3BIH84CkngOn8CzgnE=",
+      "hash": "sha256-XCK6K8Xb\/HsF\/hy0zANEW48hd80X0OOG4vuooMg0vsU=",
       "url": "_framework\/System.ComponentModel.Annotations.dll"
     },
     {
@@ -337,7 +337,7 @@
       "url": "_framework\/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-tDpDpdcBT8Q2aEUaxgEehVgiDZT9DHqaNqFFP+fp6GU=",
+      "hash": "sha256-rDFlQUDKXMfAufJb0Zqow9iCSWo+HsscYOKo4kR8scM=",
       "url": "_framework\/zh-CN\/CloudDriveWasm.resources.dll"
     },
     {
@@ -353,7 +353,7 @@
       "url": "css\/bootstrap\/bootstrap.min.css"
     },
     {
-      "hash": "sha256-Q9BXbgGg75u+9nsNJmCGD08VyS1k1+FCU1dPRp6bQNk=",
+      "hash": "sha256-R4OXMJFKtd04p8uE9x6nhm9nsBOpYUY6mgo\/cuhnK1Y=",
       "url": "css\/clouddrive.css"
     },
     {
@@ -609,7 +609,7 @@
       "url": "js\/html5-qrcode.js"
     },
     {
-      "hash": "sha256-rRNiu4ZfYR8gxXJfenwnLcxFZGEASdxr12bO84tzMaA=",
+      "hash": "sha256-JsYKjmG8baLSBKspyIitOzRFUUeDPkPGHzSRQGxTRLg=",
       "url": "js\/myjs.js"
     },
     {
@@ -689,5 +689,5 @@
       "url": "_content\/Blazored.Modal\/BlazoredModal.razor.js"
     }
   ],
-  "version": "wZQNkXo\/"
+  "version": "xE4P2H0E"
 };
