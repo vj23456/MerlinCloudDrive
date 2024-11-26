@@ -29,7 +29,7 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-1WzWmzH3kuRLPisZ1s7jT23sLqDny2ugzVL\/wUZpikM=",
+      "hash": "sha256-Y7nEOWV4wTxAocbrhURdrCLRsiQfcSGD4DFzQQ64gBg=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -49,7 +49,7 @@
       "url": "_framework\/BlazorPagination.dll"
     },
     {
-      "hash": "sha256-4KnYchy1SS9k0TXqRa7Uh+y8wOWuq0Ghd9J+iFa6J6c=",
+      "hash": "sha256-WJmlDXLRrj+KkzoE+zWYqq\/NriFoxNr+5JIfJZ7R0z4=",
       "url": "_framework\/CloudDriveWasm.dll"
     },
     {
@@ -337,7 +337,7 @@
       "url": "_framework\/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-rDFlQUDKXMfAufJb0Zqow9iCSWo+HsscYOKo4kR8scM=",
+      "hash": "sha256-KoUO0jfXmkcGLfPVMftvRtcDs0JheO4e0E8a8KwTN0M=",
       "url": "_framework\/zh-CN\/CloudDriveWasm.resources.dll"
     },
     {
@@ -689,5 +689,5 @@
       "url": "_content\/Blazored.Modal\/BlazoredModal.razor.js"
     }
   ],
-  "version": "xE4P2H0E"
+  "version": "OZtt4Kl8"
 };
