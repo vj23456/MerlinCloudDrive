@@ -51,7 +51,12 @@ var toolbarResizeObserver;
 var containerResizeObserver;
 function monitorElementResize(element, refelement, callbackname) {
     function onElementSizeChanged() {
-        fbDotnetRef.invokeMethodAsync(callbackname, refelement.offsetWidth, refelement.offsetHeight, element.offsetWidth, element.offsetHeight);
+        if (fbDotnetRef) {
+            fbDotnetRef.invokeMethodAsync(callbackname, refelement.offsetWidth, refelement.offsetHeight, element.offsetWidth, element.offsetHeight)
+                .catch(error => console.error(error));
+        } else {
+            console.warn('DotNetObjectReference is null or disposed.');
+        }
     }
     containerResizeObserver = new ResizeObserver(onElementSizeChanged);
     containerResizeObserver.observe(element);
