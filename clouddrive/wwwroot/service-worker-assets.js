@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "iwDAdx8H",
+  "version": "MNZmVxzj",
   "assets": [
     {
       "hash": "sha256-XbVspnwje11JLGlb23ypmKJcddo1o22YT7e4ONpml74=",
@@ -30,7 +30,7 @@ self.assetsManifest = {
       "url": "_framework/Blazored.Modal.dll"
     },
     {
-      "hash": "sha256-/EPZhDCYEv+5709SgSm8vHjby0OuYGfejYaMzmY3QgE=",
+      "hash": "sha256-7RcwdrsbpiNdcn1whXeMx6gHUUVgeaT+npKJhL23yX0=",
       "url": "_framework/CloudDriveWasm.dll"
     },
     {
@@ -314,7 +314,7 @@ self.assetsManifest = {
       "url": "_framework/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-Sg/BxHIz7oDgSUfkMQuHA3KLePmCAhPmLTw34shqWDM=",
+      "hash": "sha256-92pAlD+D2sO0kG0gk2Swp7NbBvDmYEnkUL2RA/OOH58=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -350,7 +350,7 @@ self.assetsManifest = {
       "url": "_framework/netstandard.dll"
     },
     {
-      "hash": "sha256-Obv2VqYvx4lQxtOTbrAuTuwHPHEfrniw6RixQ3TTtoE=",
+      "hash": "sha256-5t++zMPidFh4gfynH8ZJRbkx8uPfsd5PY8iE1UFQXE0=",
       "url": "_framework/zh-CN/CloudDriveWasm.resources.dll"
     },
     {
@@ -362,7 +362,7 @@ self.assetsManifest = {
       "url": "css/bootstrap/bootstrap.min.css"
     },
     {
-      "hash": "sha256-+Hmjua2e4eyb7CkOMX0jAzrBLmQK7Hk0zYqrn8a/F/8=",
+      "hash": "sha256-viujkHhRzA2EjO58lkuTe3CkG8ws+1dcbA7qfwEFwIQ=",
       "url": "css/clouddrive.css"
     },
     {

@@ -1,5 +1,8 @@
 KoolCenter CloudDrive2 Changelog
 ===========================================
+1.1.6
+   - update     更新内核到v0.8.8
+
 1.1.5
    - update     更新内核到v0.8.7
    - fix        web loading error on 3006.102 fw
