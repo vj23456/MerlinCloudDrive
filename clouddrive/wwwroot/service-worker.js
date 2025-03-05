@@ -1,4 +1,4 @@
-/* Manifest version: H3b1WO7E */
+/* Manifest version: V8YQU1jP */
 // Caution! Be sure you understand the caveats before publishing an application with
 // offline support. See https://aka.ms/blazor-offline-considerations
 self.importScripts('./service-worker-assets.js');
@@ -62,4 +62,24 @@ async function onFetch(event) {
     }
 
     return cachedResponse || fetch(event.request);
+}
+// Add this to a JavaScript file in your application
+function forceRefreshFromServer() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+      // Clear all caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            return caches.delete(cacheName);
+          })
+        );
+      }).then(() => {
+        window.location.reload(true);
+      });
+    });
+  }
 }

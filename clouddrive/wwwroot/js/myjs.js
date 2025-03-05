@@ -490,3 +490,24 @@ window.getItemsPerRow = function (containerId, itemWidth) {
 function openEmailClient(email, subject, body) {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
+window.forceRefreshFromServer = async function() {
+  console.log("Forcing refresh from server...");
+  
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (let registration of registrations) {
+      await registration.unregister();
+      console.log("Service worker unregistered");
+    }
+    
+    // Clear all caches
+    const cacheKeys = await caches.keys();
+    await Promise.all(
+      cacheKeys.map(cacheName => caches.delete(cacheName))
+    );
+    console.log("Caches cleared");
+    
+    // Force reload from server
+    window.location.reload(true);
+  }
+}

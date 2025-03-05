@@ -1,7 +1,7 @@
 {
   "entryAssembly": "CloudDriveWasm",
   "resources": {
-    "hash": "sha256-9TsRr02bW1a8zUf7IVD5d2R9TfRXxY80zIDtuLjeg3c=",
+    "hash": "sha256-HCC9ekcAIWaqW0nTeccQbRt+iLZDNsIQPCtLsQiIJio=",
     "runtime": {
       "dotnet.js": "sha256-eaJTmow4t8eE7FZMZR5Ja41JMOefGCbIYDTdpclGsac=",
       "dotnet.timezones.blat": "sha256-gbATD5HDsHYtW8vdPYh9iSBY4O5CjvMeCSF5xXWF1xo=",
@@ -16,7 +16,7 @@
       "Blazored.LocalStorage.dll": "sha256-xcO4wZtFwM5I9DIZf1sZpOdcsaTjw1HyqJ5AWciMDAk=",
       "Blazored.Modal.dll": "sha256-OkL/zDQTP6kkz+pR8Lki2Pljk2hwf99nXDSmE1Id0cY=",
       "BlazorPagination.dll": "sha256-dMHq7CrMWeHn5R1pN72TRE/5YJfstWId26CDK9F0fKc=",
-      "CloudDriveWasm.dll": "sha256-pR5LRAnRHsoLuVBvyF6LPOyIBKXfcDpSoEnPRGo70Ws=",
+      "CloudDriveWasm.dll": "sha256-KwII1Ib67aks04tSmGzvWHCX6KIlazxxx+nnCYVUqWE=",
       "Google.Protobuf.dll": "sha256-vJIMpzYPsHAd7qu87DbYSfJHbcyO9+LQIKCn90W1ctI=",
       "Grpc.Core.Api.dll": "sha256-zcv3VrljBUhZGFXAvqfz8R4exPMTNTS03GtOvwbR4Z0=",
       "Grpc.Net.Client.dll": "sha256-lP8VMbn6u9DUj7DDt8/b7PuoRPbTsozTd7uALzPa4UQ=",
@@ -91,7 +91,7 @@
     },
     "satelliteResources": {
       "zh-CN": {
-        "zh-CN/CloudDriveWasm.resources.dll": "sha256-RBy+mzs5MZPd5tXR/I1SX48O/i6jyeFCyOALc75OLTw="
+        "zh-CN/CloudDriveWasm.resources.dll": "sha256-f1AXDfgFyw7n3QTvJfUlXSTQEoonMESPAPdpI4OWYKU="
       }
     },
     "runtimeAssets": {
