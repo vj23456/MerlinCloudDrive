@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "AL+0bKZ0",
+  "version": "cl6eBcZO",
   "assets": [
     {
       "hash": "sha256-XbVspnwje11JLGlb23ypmKJcddo1o22YT7e4ONpml74=",
@@ -30,7 +30,7 @@ self.assetsManifest = {
       "url": "_framework/Blazored.Modal.dll"
     },
     {
-      "hash": "sha256-equ7SY1AaJR3Zyi0T55x0eRucc9ITPg7MwmPULHKLTA=",
+      "hash": "sha256-RNEAd5xd29ovrG8zWRAdfd6G9TnrCamJ7e1nur6Q0K0=",
       "url": "_framework/CloudDriveWasm.dll"
     },
     {
@@ -182,7 +182,7 @@ self.assetsManifest = {
       "url": "_framework/System.ComponentModel.dll"
     },
     {
-      "hash": "sha256-loCmpVqE23cfEDM4GH21UAZweBoe9HICYyiKE7mplu4=",
+      "hash": "sha256-Ld/lfZ3Fmm8awej1DJXAXe6UjokR5FNHGRRRiw0mIwU=",
       "url": "_framework/System.Console.dll"
     },
     {
@@ -238,7 +238,7 @@ self.assetsManifest = {
       "url": "_framework/System.ObjectModel.dll"
     },
     {
-      "hash": "sha256-Qbn0tRhsHaPndbK9VQBn4zIxL2Ug15RwjosLQ3srsXQ=",
+      "hash": "sha256-51qPPI7lMqA96L87ln2aEeTK4tEFXTlh8svcc7Ns40A=",
       "url": "_framework/System.Private.CoreLib.dll"
     },
     {
@@ -254,7 +254,7 @@ self.assetsManifest = {
       "url": "_framework/System.Runtime.InteropServices.JavaScript.dll"
     },
     {
-      "hash": "sha256-PQvsEOOh2X0yGu4aXNkIl5p2On8kvIGe9jgjZP9TncM=",
+      "hash": "sha256-Hflvt5XEUJwj0hG3OXu8SNisYmN6NkTPFKVHpO1k1ig=",
       "url": "_framework/System.Runtime.dll"
     },
     {
@@ -314,7 +314,7 @@ self.assetsManifest = {
       "url": "_framework/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-pkgM7zSwSLQrHfMj156gdrmfpOI98vis0TWdMKHz08s=",
+      "hash": "sha256-/6MlQUfNY9Ok4YYAvH9se5Rw/m0kMJHOTGVwH3OiQDY=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -350,7 +350,7 @@ self.assetsManifest = {
       "url": "_framework/netstandard.dll"
     },
     {
-      "hash": "sha256-eYDnVaPPiwXXwGUU0cEfKPTMm3mwu+b5gWsCIjmncqI=",
+      "hash": "sha256-+NMW8Vm0UH59pL+TUqsXdM4JVyjCmtk2JJIiSu3DnS0=",
       "url": "_framework/zh-CN/CloudDriveWasm.resources.dll"
     },
     {
@@ -610,10 +610,6 @@ self.assetsManifest = {
       "url": "index.html"
     },
     {
-      "hash": "sha256-8ZRc1sGeVrPBx4lD717BgRaQekyh78QKV9SKsdt638U=",
-      "url": "js/clouddrive.js"
-    },
-    {
       "hash": "sha256-ihtY1iTutH6eMHNTGl02TkGi54U8BShzp5kX+X3Qu0Q=",
       "url": "js/hammer.min.js"
     },
@@ -622,7 +618,7 @@ self.assetsManifest = {
       "url": "js/html5-qrcode.js"
     },
     {
-      "hash": "sha256-gfkhgS+dnWIgzCW7kciTlGUGzkpp1oWN+pz6Nlqcf2c=",
+      "hash": "sha256-LdwGekd6TphMp1ESbv270E0av+U5XcbdccteAw70glk=",
       "url": "js/myjs.js"
     },
     {

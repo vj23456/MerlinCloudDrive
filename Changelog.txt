@@ -1,5 +1,8 @@
 KoolCenter CloudDrive2 Changelog
 ===========================================
+1.2.0
+   - update     更新内核到v0.8.15
+
 1.1.9
    - update     更新内核到v0.8.14
 

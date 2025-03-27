@@ -511,3 +511,19 @@ window.forceRefreshFromServer = async function() {
     window.location.reload(true);
   }
 }
+// Function to select text in an input element
+window.selectTextInInput = function (element, start, end) {
+    if (element) {
+        element.focus();
+        setTimeout(function () {
+            if (typeof element.setSelectionRange === 'function') {
+                element.setSelectionRange(start, end);
+            } else if (element.createTextRange) {
+                var range = element.createTextRange();
+                range.moveStart('character', start);
+                range.moveEnd('character', end - element.value.length);
+                range.select();
+            }
+        }, 50);
+    }
+};
