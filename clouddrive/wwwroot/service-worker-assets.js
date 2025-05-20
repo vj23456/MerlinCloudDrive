@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "cl6eBcZO",
+  "version": "2A4iTde6",
   "assets": [
     {
       "hash": "sha256-XbVspnwje11JLGlb23ypmKJcddo1o22YT7e4ONpml74=",
@@ -30,7 +30,7 @@ self.assetsManifest = {
       "url": "_framework/Blazored.Modal.dll"
     },
     {
-      "hash": "sha256-RNEAd5xd29ovrG8zWRAdfd6G9TnrCamJ7e1nur6Q0K0=",
+      "hash": "sha256-AJ//ZW84KoMIzxkSpiCb5Nv3Fr9wfAXW37WNlGXyzUM=",
       "url": "_framework/CloudDriveWasm.dll"
     },
     {
@@ -174,7 +174,7 @@ self.assetsManifest = {
       "url": "_framework/System.ComponentModel.Primitives.dll"
     },
     {
-      "hash": "sha256-kBYNbpLOEiEDPK7Pa2AhoH3fm4jfftB+D8WPhaYTRMU=",
+      "hash": "sha256-LrG8ydgVm5UHTYe9R2kZg+5THTKXLDv690VDRYwCPV8=",
       "url": "_framework/System.ComponentModel.TypeConverter.dll"
     },
     {
@@ -238,7 +238,7 @@ self.assetsManifest = {
       "url": "_framework/System.ObjectModel.dll"
     },
     {
-      "hash": "sha256-51qPPI7lMqA96L87ln2aEeTK4tEFXTlh8svcc7Ns40A=",
+      "hash": "sha256-FXva67Yk4tvtlIbJvNUmHOnPslqHA5ftGdaB8kvza8A=",
       "url": "_framework/System.Private.CoreLib.dll"
     },
     {
@@ -254,7 +254,7 @@ self.assetsManifest = {
       "url": "_framework/System.Runtime.InteropServices.JavaScript.dll"
     },
     {
-      "hash": "sha256-Hflvt5XEUJwj0hG3OXu8SNisYmN6NkTPFKVHpO1k1ig=",
+      "hash": "sha256-8t+NTyIn9qzkGRhh1g57IwsYWRFIKzNmd7lfMvLyGY8=",
       "url": "_framework/System.Runtime.dll"
     },
     {
@@ -314,7 +314,7 @@ self.assetsManifest = {
       "url": "_framework/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-/6MlQUfNY9Ok4YYAvH9se5Rw/m0kMJHOTGVwH3OiQDY=",
+      "hash": "sha256-j5Fco2wq+WfnKjII/v0Py6GP+e05Ipz9/dV61IKkw64=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -350,7 +350,7 @@ self.assetsManifest = {
       "url": "_framework/netstandard.dll"
     },
     {
-      "hash": "sha256-+NMW8Vm0UH59pL+TUqsXdM4JVyjCmtk2JJIiSu3DnS0=",
+      "hash": "sha256-Z/9xIKecVivY6FxOw636uz4K28vp4rPuB2zKEC/jbgM=",
       "url": "_framework/zh-CN/CloudDriveWasm.resources.dll"
     },
     {
@@ -362,7 +362,7 @@ self.assetsManifest = {
       "url": "css/bootstrap/bootstrap.min.css"
     },
     {
-      "hash": "sha256-viujkHhRzA2EjO58lkuTe3CkG8ws+1dcbA7qfwEFwIQ=",
+      "hash": "sha256-1YrapCqy+HYPpFwwT+HSpRXMsego8VYGqGFH0rf57R0=",
       "url": "css/clouddrive.css"
     },
     {
@@ -618,7 +618,7 @@ self.assetsManifest = {
       "url": "js/html5-qrcode.js"
     },
     {
-      "hash": "sha256-LdwGekd6TphMp1ESbv270E0av+U5XcbdccteAw70glk=",
+      "hash": "sha256-NkDMa5zBzX6kYwaG3yQRVosegibX4Dvc6lfFvIBrgXw=",
       "url": "js/myjs.js"
     },
     {

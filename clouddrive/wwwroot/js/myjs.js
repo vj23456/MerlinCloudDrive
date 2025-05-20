@@ -526,4 +526,17 @@ window.selectTextInInput = function (element, start, end) {
             }
         }, 50);
     }
+}
+window.autoResizeInput = (element, value) => {
+    if (!element) return;
+    const tmpSpan = document.createElement("span");
+    tmpSpan.style.visibility = "hidden";
+    tmpSpan.style.whiteSpace = "pre";
+    tmpSpan.style.font = getComputedStyle(element).font;
+    tmpSpan.textContent = value;
+    document.body.appendChild(tmpSpan);
+    const width = Math.max(176, tmpSpan.getBoundingClientRect().width + 40); // add extra padding if needed
+    document.body.removeChild(tmpSpan);
+    const maxWidth = window.innerWidth * 0.8;
+    element.style.width = Math.min(width, maxWidth) + "px";
 };
