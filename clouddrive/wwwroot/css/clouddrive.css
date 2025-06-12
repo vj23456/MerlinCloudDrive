@@ -1073,3 +1073,19 @@ ul.ulbreadcrumb {
     color: gray !important;
     background-color: #e9ecef; /* Optional: to mimic a disabled look */
 }
+.pause-resume-button {
+    background-color: #007bff;
+    /* color: white; */
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pause-resume-button:hover {
+    background-color: #0056b3;
+}
+.paused-tab {
+    background-color: #ffd6d6; /* Light red background to indicate paused state */
+    transition: background-color 0.3s ease; /* Smooth transition for better UX */
+}

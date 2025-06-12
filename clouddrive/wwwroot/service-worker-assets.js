@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "cl6eBcZO",
+  "version": "pT05vGEp",
   "assets": [
     {
       "hash": "sha256-XbVspnwje11JLGlb23ypmKJcddo1o22YT7e4ONpml74=",
@@ -30,7 +30,7 @@ self.assetsManifest = {
       "url": "_framework/Blazored.Modal.dll"
     },
     {
-      "hash": "sha256-RNEAd5xd29ovrG8zWRAdfd6G9TnrCamJ7e1nur6Q0K0=",
+      "hash": "sha256-Y532EtVbRNnmii0W/G8ExSkkJEm19T9OFNIl51hUUm4=",
       "url": "_framework/CloudDriveWasm.dll"
     },
     {
@@ -58,7 +58,7 @@ self.assetsManifest = {
       "url": "_framework/Microsoft.AspNetCore.Components.Forms.dll"
     },
     {
-      "hash": "sha256-8NSf3FgSKauqy7pZ8J08QLZSMf+y2hTZICzeEqbfOpo=",
+      "hash": "sha256-u0JXRVfCGv5qczbszPfc16V457QktdN8m6vZdV23i1w=",
       "url": "_framework/Microsoft.AspNetCore.Components.Web.dll"
     },
     {
@@ -174,7 +174,7 @@ self.assetsManifest = {
       "url": "_framework/System.ComponentModel.Primitives.dll"
     },
     {
-      "hash": "sha256-kBYNbpLOEiEDPK7Pa2AhoH3fm4jfftB+D8WPhaYTRMU=",
+      "hash": "sha256-LrG8ydgVm5UHTYe9R2kZg+5THTKXLDv690VDRYwCPV8=",
       "url": "_framework/System.ComponentModel.TypeConverter.dll"
     },
     {
@@ -238,7 +238,7 @@ self.assetsManifest = {
       "url": "_framework/System.ObjectModel.dll"
     },
     {
-      "hash": "sha256-51qPPI7lMqA96L87ln2aEeTK4tEFXTlh8svcc7Ns40A=",
+      "hash": "sha256-p3syZOV/UyLr+EoS4u+iJL4cqlcBVa+9hO+DT96fxOE=",
       "url": "_framework/System.Private.CoreLib.dll"
     },
     {
@@ -254,7 +254,7 @@ self.assetsManifest = {
       "url": "_framework/System.Runtime.InteropServices.JavaScript.dll"
     },
     {
-      "hash": "sha256-Hflvt5XEUJwj0hG3OXu8SNisYmN6NkTPFKVHpO1k1ig=",
+      "hash": "sha256-ybUVmoSAcG+a3zVCRx3EVJykkwt3I3QCkuBkGF61KOA=",
       "url": "_framework/System.Runtime.dll"
     },
     {
@@ -314,7 +314,7 @@ self.assetsManifest = {
       "url": "_framework/TinyPinyin.dll"
     },
     {
-      "hash": "sha256-/6MlQUfNY9Ok4YYAvH9se5Rw/m0kMJHOTGVwH3OiQDY=",
+      "hash": "sha256-wDz0gDWimQSXKPgTbLkr/6lU0sRtG1i6ewcCQYZAJhY=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -350,7 +350,7 @@ self.assetsManifest = {
       "url": "_framework/netstandard.dll"
     },
     {
-      "hash": "sha256-+NMW8Vm0UH59pL+TUqsXdM4JVyjCmtk2JJIiSu3DnS0=",
+      "hash": "sha256-kdn5irwgWmdWCj+bk5C3ciRUGHTps0SH9diEyJKzQLY=",
       "url": "_framework/zh-CN/CloudDriveWasm.resources.dll"
     },
     {
@@ -362,7 +362,7 @@ self.assetsManifest = {
       "url": "css/bootstrap/bootstrap.min.css"
     },
     {
-      "hash": "sha256-viujkHhRzA2EjO58lkuTe3CkG8ws+1dcbA7qfwEFwIQ=",
+      "hash": "sha256-1YrapCqy+HYPpFwwT+HSpRXMsego8VYGqGFH0rf57R0=",
       "url": "css/clouddrive.css"
     },
     {
@@ -606,7 +606,7 @@ self.assetsManifest = {
       "url": "img/webdav.png"
     },
     {
-      "hash": "sha256-ZHVtCsbx0IQMKKCN4ABpuU+vFbRtZ8p7qBl+EtX+lmo=",
+      "hash": "sha256-d6tnEMkqMiv5IckjIelIW7kb8WJ0ulnfnwKLnmIHV8E=",
       "url": "index.html"
     },
     {
@@ -614,11 +614,15 @@ self.assetsManifest = {
       "url": "js/hammer.min.js"
     },
     {
+      "hash": "sha256-SpSwRbRDwP4BBWpdNFuspqL+hxqZoZ9EMLS62uylVKk=",
+      "url": "js/html5-qrcode-v2.js"
+    },
+    {
       "hash": "sha256-sB9M2Ib9u7kk2cu7i03gC89LMjKk+O9dnR2oMGKZEv0=",
       "url": "js/html5-qrcode.js"
     },
     {
-      "hash": "sha256-LdwGekd6TphMp1ESbv270E0av+U5XcbdccteAw70glk=",
+      "hash": "sha256-O0cogqaL39Q8ysrr0C3uuFT/YjEDAG8svZ1qPQpg2pM=",
       "url": "js/myjs.js"
     },
     {
