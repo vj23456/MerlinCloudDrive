@@ -553,3 +553,233 @@ window.autoResizeInput = (element, value) => {
     const maxWidth = window.innerWidth * 0.8;
     element.style.width = Math.min(width, maxWidth) + "px";
 };
+
+function fixModalOverflow() {
+    // Wait for modal to be rendered
+    setTimeout(() => {
+        const modals = document.querySelectorAll('.blazored-modal, .modal');
+        modals.forEach(modal => {
+            // Force modal to stay within viewport
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.zIndex = '9999';
+            modal.style.overflow = 'hidden';
+            
+            const modalContent = modal.querySelector('.blazored-modal-content, .modal-content');
+            if (modalContent) {
+                modalContent.style.maxWidth = '100vw';
+                modalContent.style.maxHeight = '100vh';
+                modalContent.style.overflow = 'hidden';
+                modalContent.style.margin = '0';
+                modalContent.style.borderRadius = '0';
+                modalContent.style.width = '100vw';
+                modalContent.style.height = '100vh';
+                modalContent.style.display = 'flex';
+                modalContent.style.flexDirection = 'column';
+                
+                // Make modal content scrollable
+                const modalBody = modalContent.querySelector('.modal-body, .blazored-modal-body');
+                if (modalBody) {
+                    modalBody.style.flex = '1';
+                    modalBody.style.maxHeight = 'calc(100vh - 120px)';
+                    modalBody.style.overflowY = 'auto';
+                    modalBody.style.overflowX = 'hidden';
+                    modalBody.style.width = '100%';
+                    modalBody.style.maxWidth = '100vw';
+                    modalBody.style.webkitOverflowScrolling = 'touch';
+                    
+                    // Fix table overflow specifically
+                    const tables = modalBody.querySelectorAll('table');
+                    tables.forEach(table => {
+                        table.style.width = '100%';
+                        table.style.maxWidth = '100%';
+                        table.style.tableLayout = 'auto';
+                        table.style.fontSize = '12px';
+                        
+                        // Wrap table in responsive container if not already wrapped
+                        let tableWrapper = table.closest('.table-responsive, .table-container');
+                        if (!tableWrapper) {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'table-responsive';
+                            wrapper.style.width = '100%';
+                            wrapper.style.maxWidth = 'calc(100vw - 30px)';
+                            wrapper.style.overflowX = 'auto';
+                            wrapper.style.overflowY = 'visible';
+                            wrapper.style.webkitOverflowScrolling = 'touch';
+                            table.parentNode.insertBefore(wrapper, table);
+                            wrapper.appendChild(table);
+                            tableWrapper = wrapper;
+                        } else {
+                            tableWrapper.style.width = '100%';
+                            tableWrapper.style.maxWidth = 'calc(100vw - 30px)';
+                            tableWrapper.style.overflowX = 'auto';
+                            tableWrapper.style.overflowY = 'visible';
+                            tableWrapper.style.webkitOverflowScrolling = 'touch';
+                        }
+                        
+                        // Minimize table cell content
+                        const cells = table.querySelectorAll('th, td');
+                        cells.forEach(cell => {
+                            cell.style.padding = '4px';
+                            cell.style.fontSize = '12px';
+                            cell.style.whiteSpace = 'nowrap';
+                            cell.style.textOverflow = 'ellipsis';
+                            cell.style.maxWidth = '120px';
+                        });
+                    });
+                }
+                
+                // Fix modal header
+                const modalHeader = modalContent.querySelector('.modal-header, .blazored-modal-header');
+                if (modalHeader) {
+                    modalHeader.style.flexShrink = '0';
+                    modalHeader.style.width = '100%';
+                    modalHeader.style.maxWidth = '100vw';
+                    modalHeader.style.padding = '10px 15px';
+                }
+                
+                // Fix modal footer
+                const modalFooter = modalContent.querySelector('.modal-footer, .blazored-modal-footer');
+                if (modalFooter) {
+                    modalFooter.style.flexShrink = '0';
+                    modalFooter.style.width = '100%';
+                    modalFooter.style.maxWidth = '100vw';
+                    modalFooter.style.padding = '10px 15px';
+                }
+            }
+        });
+    }, 50);
+}
+
+function applyMobileModalFixes() {
+    // Only apply on mobile devices
+    if (window.innerWidth <= 768) {
+        fixModalOverflow();
+        
+        // Re-apply fixes when window is resized
+        window.addEventListener('resize', fixModalOverflow);
+        
+        // Use MutationObserver to watch for new modals
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.classList && node.classList.contains('blazored-modal')) {
+                                fixModalOverflow();
+                            } else if (node.querySelector && node.querySelector('.blazored-modal')) {
+                                fixModalOverflow();
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+}
+
+// Initialize mobile modal fixes immediately
+if (typeof window !== 'undefined') {
+    // Apply fixes when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyMobileModalFixes);
+    } else {
+        applyMobileModalFixes();
+    }
+    
+    // Also apply fixes on window load
+    window.addEventListener('load', applyMobileModalFixes);
+    
+    // Apply fixes when window is resized
+    window.addEventListener('resize', () => {
+        if (window.innerWidth <= 768) {
+            fixModalOverflow();
+        }
+    });
+}
+
+// Tooltip functions for MobileTooltip component
+window.showTooltip = function(container, tooltip) {
+    try {
+        console.log('showTooltip called with:', container, tooltip);
+        
+        if (!container || !tooltip) {
+            console.log('Container or tooltip element not found');
+            return;
+        }
+        
+        // Make the tooltip visible
+        tooltip.style.display = 'block';
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '1';
+        
+        // Position the tooltip
+        const containerRect = container.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('Container rect:', containerRect);
+        
+        // Get actual tooltip dimensions after making it visible
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const tooltipWidth = tooltipRect.width || 200;
+        const tooltipHeight = tooltipRect.height || 50;
+        
+        console.log('Tooltip dimensions:', tooltipWidth, tooltipHeight);
+        
+        // Calculate position above the container, centered horizontally
+        let left = containerRect.left + (containerRect.width / 2) - (tooltipWidth / 2);
+        let top = containerRect.top - tooltipHeight - 10;
+        
+        // Adjust if tooltip would go off screen
+        if (left < 10) {
+            left = 10;
+        } else if (left + tooltipWidth > viewportWidth - 10) {
+            left = viewportWidth - tooltipWidth - 10;
+        }
+        
+        // If tooltip would go above viewport, show it below instead
+        if (top < 10) {
+            top = containerRect.bottom + 10;
+            // Set custom property for arrow direction
+            tooltip.style.setProperty('--arrow-direction', 'up');
+        } else {
+            tooltip.style.removeProperty('--arrow-direction');
+        }
+        
+        // Apply position
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        
+        console.log('Tooltip positioned at:', { left, top });
+        
+    } catch (error) {
+        console.error('Error in showTooltip:', error);
+    }
+};
+
+window.hideTooltip = function(tooltip) {
+    try {
+        console.log('hideTooltip called with:', tooltip);
+        
+        if (!tooltip) {
+            console.log('Tooltip element not found');
+            return;
+        }
+        
+        tooltip.style.display = 'none';
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+        
+    } catch (error) {
+        console.error('Error in hideTooltip:', error);
+    }
+};
