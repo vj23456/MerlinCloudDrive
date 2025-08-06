@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files Header Redesign Mockup</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Modern CSS Variables for theming */
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #6b7280;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            
+            --bg-primary: rgba(255, 255, 255, 0.95);
+            --bg-secondary: #f8fafc;
+            --bg-hover: rgba(0, 0, 0, 0.04);
+            --bg-active: rgba(59, 130, 246, 0.1);
+            
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            
+            --border-light: rgba(0, 0, 0, 0.08);
+            --border-medium: rgba(0, 0, 0, 0.12);
+            
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+            
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark theme support */
+        [data-theme="dark"] {
+            --bg-primary: rgba(31, 41, 55, 0.95);
+            --bg-secondary: #111827;
+            --bg-hover: rgba(255, 255, 255, 0.05);
+            --bg-active: rgba(59, 130, 246, 0.2);
+            
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-medium: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Demo container */
+        .demo-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .demo-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Modern Files Header */
+        .files-header-modern {
+            background: var(--bg-primary);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Navigation Row */
+        .header-nav-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        /* Breadcrumb Navigation */
+        .breadcrumb-modern {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* Global Search */
+        .global-search {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Toolbar Row */
+        .header-toolbar-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+        }
+
+        /* Left Toolbar Section */
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-stats {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .selection-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-active);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Right Toolbar Section */
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Modern Button Styles */
+        .btn-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: white;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            height: 32px;
+            min-width: 32px;
+            justify-content: center;
+        }
+
+        .btn-modern:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+
+        .btn-modern.btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-modern.btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-modern.btn-success {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .btn-modern.btn-danger {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+
+        .btn-modern.btn-icon-only {
+            padding: 0.5rem;
+            width: 32px;
+        }
+
+        .btn-modern.active {
+            background: var(--bg-active);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* View Toggle Group */
+        .view-toggle-group {
+            display: flex;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: white;
+        }
+
+        .view-toggle-group .btn-modern {
+            border: none;
+            border-radius: 0;
+            border-right: 1px solid var(--border-light);
+        }
+
+        .view-toggle-group .btn-modern:last-child {
+            border-right: none;
+        }
+
+        /* Badge styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--text-muted);
+            color: white;
+        }
+
+        .badge.badge-primary {
+            background: var(--primary-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .global-search {
+                width: 250px;
+            }
+            
+            .header-nav-row {
+                padding: 0.75rem 1rem;
+            }
+            
+            .header-toolbar-row {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-nav-row {
+                grid-template-columns: 1fr auto;
+                gap: 0.75rem;
+            }
+            
+            .global-search {
+                width: 200px;
+            }
+            
+            .quick-actions .btn-modern span {
+                display: none;
+            }
+            
+            .toolbar-left {
+                gap: 0.5rem;
+            }
+            
+            .file-stats span:not(:first-child) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-nav-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .global-search {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+            
+            .quick-actions {
+                position: absolute;
+                top: 0.75rem;
+                right: 1rem;
+            }
+            
+            .header-toolbar-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .toolbar-right {
+                justify-self: end;
+            }
+        }
+
+        /* Demo sections */
+        .demo-section {
+            margin: 2rem 0;
+            padding: 1rem 2rem;
+        }
+
+        .demo-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .demo-description {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Theme toggle for demo */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        /* Sample file list for context */
+        .sample-files {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.875rem;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-icon {
+            width: 20px;
+            color: var(--text-muted);
+        }
+
+        .file-name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .file-size {
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .file-type {
+            color: var(--text-secondary);
+        }
+
+        .file-date {
+            color: var(--text-secondary);
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button class="btn-modern" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+            <span>Toggle Theme</span>
+        </button>
+    </div>
+
+    <div class="demo-container">
+        <div class="demo-header">
+            CloudDrive2 - Files Header Redesign Mockup
+        </div>
+
+        <!-- Demo Section 1: Default State -->
+        <div class="demo-section">
+            <div class="demo-title">1. Default State - No Selection</div>
+            <div class="demo-description">
+                Clean, compact header with breadcrumb navigation, global search, and essential actions.
+            </div>
+            
+            <div class="files-header-modern">
+                <!-- Navigation Row -->
+                <div class="header-nav-row">
+                    <!-- Breadcrumb Navigation -->
+                    <div class="breadcrumb-modern">
+                        <div class="breadcrumb-item">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </div>
+                        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                        <div class="breadcrumb-item">
+                            <span>Movies</span>
+                        </div>
+                        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                        <div class="breadcrumb-item active">
+                            <span>4K特效宇宙Remux</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Global Search -->
+                    <div class="global-search">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search files...">
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="btn-modern btn-primary">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                        <button class="btn-modern">
+                            <i class="fas fa-folder-plus"></i>
+                            <span>New Folder</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Toolbar Row -->
+                <div class="header-toolbar-row">
+                    <!-- Left Section -->
+                    <div class="toolbar-left">
+                        <div class="file-stats">
+                            <span><i class="fas fa-file"></i> 23 items</span>
+                            <span><i class="fas fa-hdd"></i> 120.5 GB</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Section -->
+                    <div class="toolbar-right">
+                        <!-- View Toggle -->
+                        <div class="view-toggle-group">
+                            <button class="btn-modern active" title="Grid View">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="btn-modern" title="List View">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <button class="btn-modern" title="Waterfall View">
+                                <i class="fas fa-images"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Properties Toggle -->
+                        <button class="btn-modern btn-icon-only" title="File Properties">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Section 2: Selection State -->
+        <div class="demo-section">
+            <div class="demo-title">2. Selection State - 2 Files Selected</div>
+            <div class="demo-description">
+                When files are selected, the left section shows selection info and contextual actions.
+            </div>
+            
+            <div class="files-header-modern">
+                <!-- Navigation Row (same as above) -->
+                <div class="header-nav-row">
+                    <div class="breadcrumb-modern">
+                        <div class="breadcrumb-item">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </div>
+                        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                        <div class="breadcrumb-item">
+                            <span>Movies</span>
+                        </div>
+                        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                        <div class="breadcrumb-item active">
+                            <span>4K特效宇宙Remux</span>
+                        </div>
+                    </div>
+                    
+                    <div class="global-search">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search files...">
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button class="btn-modern btn-primary">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                        <button class="btn-modern">
+                            <i class="fas fa-folder-plus"></i>
+                            <span>New Folder</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Toolbar Row with Selection -->
+                <div class="header-toolbar-row">
+                    <div class="toolbar-left">
+                        <div class="selection-info">
+                            <i class="fas fa-check-circle"></i>
+                            <span>2 selected</span>
+                            <span class="badge badge-primary">99.4 GB</span>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn-modern btn-success">
+                                <i class="fas fa-download"></i>
+                                <span>Download</span>
+                            </button>
+                            <button class="btn-modern">
+                                <i class="fas fa-play"></i>
+                                <span>Play With</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <button class="btn-modern btn-danger">
+                                <i class="fas fa-trash"></i>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="toolbar-right">
+                        <div class="view-toggle-group">
+                            <button class="btn-modern active">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="btn-modern">
+                                <i class="fas fa-list"></i>
+                            </button>
+                            <button class="btn-modern">
+                                <i class="fas fa-images"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="btn-modern btn-icon-only active">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Section 3: Mobile Layout -->
+        <div class="demo-section">
+            <div class="demo-title">3. Mobile Layout (Responsive)</div>
+            <div class="demo-description">
+                Optimized layout for mobile devices with collapsible elements and priority-based display.
+            </div>
+            
+            <div style="max-width: 375px; margin: 0 auto; border: 1px solid var(--border-light); border-radius: var(--radius-lg);">
+                <div class="files-header-modern">
+                    <div class="header-nav-row">
+                        <div class="breadcrumb-modern">
+                            <div class="breadcrumb-item">
+                                <i class="fas fa-home"></i>
+                                <span>Home</span>
+                            </div>
+                            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                            <div class="breadcrumb-item">
+                                <span>...</span>
+                            </div>
+                            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                            <div class="breadcrumb-item active">
+                                <span>4K特效宇宙Remux</span>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <button class="btn-modern btn-primary btn-icon-only">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="btn-modern btn-icon-only">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="global-search">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" placeholder="Search...">
+                        </div>
+                    </div>
+                    
+                    <div class="header-toolbar-row">
+                        <div class="toolbar-left">
+                            <div class="file-stats">
+                                <span>23 items</span>
+                            </div>
+                        </div>
+                        
+                        <div class="toolbar-right">
+                            <div class="view-toggle-group">
+                                <button class="btn-modern active btn-icon-only">
+                                    <i class="fas fa-th-large"></i>
+                                </button>
+                                <button class="btn-modern btn-icon-only">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="btn-modern btn-icon-only">
+                                    <i class="fas fa-images"></i>
+                                </button>
+                            </div>
+                            
+                            <button class="btn-modern btn-icon-only">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample file list for context -->
+        <div class="sample-files">
+            <div class="file-item">
+                <i class="fas fa-video file-icon"></i>
+                <div class="file-name">霸王.2018.UHD.BluRay.REMUX.2160p.HEVC.TrueHD.7.1-CHD.mkv</div>
+                <div class="file-size">39.4 GB</div>
+                <div class="file-type">MKV Video</div>
+                <div class="file-date">8月 13, 2024 05:59</div>
+            </div>
+            <div class="file-item">
+                <i class="fas fa-video file-icon"></i>
+                <div class="file-name">蝙蝠侠前传1: 侠影之谜.2005.UHD.BluRay.REMUX.2160p.HEVC.DTS-HD.MA.5.1.2Audios-CHD.mkv</div>
+                <div class="file-size">60.3 GB</div>
+                <div class="file-type">MKV Video</div>
+                <div class="file-date">8月 13, 2024 05:59</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+        }
+
+        // Add some interactive behaviors
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search input focus effect
+            const searchInputs = document.querySelectorAll('.search-input');
+            searchInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+
+            // Button hover effects
+            const buttons = document.querySelectorAll('.btn-modern');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-1px)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // View toggle simulation
+            const viewButtons = document.querySelectorAll('.view-toggle-group .btn-modern');
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from siblings
+                    this.parentElement.querySelectorAll('.btn-modern').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Waterfall Layout Test</title>
+    <link href="css/waterfall.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>True Waterfall Layout Test - Preserves Image Aspect Ratios</h1>
+        
+        <div class="files-waterfall" id="waterfall-test">
+            <!-- Various aspect ratio images to test the layout -->
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/400?random=1" alt="Portrait image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Portrait Image.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>2.1 MB</span>
+                            <span>Jan 15</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/200?random=2" alt="Landscape image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Landscape Photo.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>1.8 MB</span>
+                            <span>Jan 14</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/500?random=3" alt="Tall image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Tall Portrait.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>3.2 MB</span>
+                            <span>Jan 13</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-folder">
+                    <div class="folder-icon">
+                        <i class="fas fa-folder fa-3x" style="color: #ffc107;"></i>
+                    </div>
+                    <div class="folder-name">Photo Albums</div>
+                    <div class="folder-info">Jan 12, 2025</div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/300?random=4" alt="Square image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Square Image.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>1.5 MB</span>
+                            <span>Jan 11</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/600?random=5" alt="Very tall image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Very Tall.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>4.1 MB</span>
+                            <span>Jan 10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/150?random=6" alt="Wide image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Wide Panorama.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>2.8 MB</span>
+                            <span>Jan 09</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-file">
+                    <div class="file-icon-container">
+                        <i class="fas fa-file-video fa-2x" style="color: #007bff;"></i>
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name">Movie Clip.mp4</div>
+                        <div class="file-meta">
+                            <span>125 MB</span>
+                            <span>Jan 08</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/350?random=7" alt="Medium image" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Medium Size.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>2.5 MB</span>
+                            <span>Jan 07</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waterfall-item">
+                <div class="waterfall-image">
+                    <img src="https://picsum.photos/300/180?random=8" alt="Short landscape" class="waterfall-img" loading="lazy"/>
+                    <div class="waterfall-overlay">
+                        <div class="waterfall-file-name">Short Landscape.jpg</div>
+                        <div class="waterfall-file-info">
+                            <span>1.9 MB</span>
+                            <span>Jan 06</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Load waterfall JavaScript -->
+    <script src="js/waterfall.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing waterfall layout test...');
+            waterfallHelper.initializeLayout('#waterfall-test');
+        });
+    </script>
+</body>
+</html>

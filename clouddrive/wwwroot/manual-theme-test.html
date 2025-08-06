@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Theme Debug - Manual Test</title>
+    
+    <!-- Load same CSS as main app -->
+    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="css/modern.css" rel="stylesheet" />
+    
+    <style>
+        body {
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .debug-panel {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            border-radius: 8px;
+            background-color: var(--bs-secondary-bg, #f8f9fa);
+        }
+        .button-group {
+            margin: 10px 0;
+        }
+        .button-group button {
+            margin: 5px;
+            padding: 8px 16px;
+        }
+        .status {
+            font-family: monospace;
+            font-size: 14px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        [data-theme="dark"] .status {
+            background: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Theme Manual Debug Test</h1>
+    
+    <div class="debug-panel">
+        <h3>Current Status</h3>
+        <div class="status" id="status">
+            Loading...
+        </div>
+        
+        <div class="button-group">
+            <h4>Manual Theme Setting</h4>
+            <button onclick="testSetTheme('light')" class="btn btn-primary">Set Light Theme</button>
+            <button onclick="testSetTheme('dark')" class="btn btn-secondary">Set Dark Theme</button>
+            <button onclick="testSetTheme('auto')" class="btn btn-info">Set Auto Theme</button>
+        </div>
+        
+        <div class="button-group">
+            <h4>LocalStorage Operations</h4>
+            <button onclick="clearLocalStorage()" class="btn btn-warning">Clear localStorage</button>
+            <button onclick="setLightInStorage()" class="btn btn-success">Force "light" in localStorage</button>
+            <button onclick="location.reload()" class="btn btn-danger">Reload Page</button>
+        </div>
+        
+        <div class="button-group">
+            <h4>Debug Actions</h4>
+            <button onclick="checkCurrentState()" class="btn btn-outline-primary">Check Current State</button>
+            <button onclick="simulatePageLoad()" class="btn btn-outline-secondary">Simulate Page Load Logic</button>
+        </div>
+    </div>
+
+    <!-- Load navigation-helpers.js for themeManager -->
+    <script src="js/navigation-helpers.js"></script>
+    
+    <script>
+        function updateStatus() {
+            const dataTheme = document.documentElement.getAttribute('data-theme');
+            const localStorageTheme = localStorage.getItem('theme');
+            const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            
+            const computedBg = getComputedStyle(document.documentElement).getPropertyValue('--bs-body-bg').trim();
+            const computedColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-body-color').trim();
+            
+            const status = `
+Data-theme attribute: "${dataTheme || 'none'}"
+LocalStorage theme: "${localStorageTheme || 'none'}"
+System preference: "${systemPreference}"
+CSS --bs-body-bg: "${computedBg}"
+CSS --bs-body-color: "${computedColor}"
+Body background: "${getComputedStyle(document.body).backgroundColor}"
+Body color: "${getComputedStyle(document.body).color}"
+Timestamp: ${new Date().toLocaleTimeString()}
+            `.trim();
+            
+            document.getElementById('status').textContent = status;
+        }
+        
+        function testSetTheme(theme) {
+            console.log(`[TEST] Testing setTheme("${theme}")`);
+            
+            if (window.themeManager && window.themeManager.setTheme) {
+                const result = window.themeManager.setTheme(theme);
+                console.log(`[TEST] setTheme returned: "${result}"`);
+                setTimeout(updateStatus, 100);
+            } else {
+                console.error('[TEST] themeManager not available');
+                alert('themeManager not available - check console');
+            }
+        }
+        
+        function clearLocalStorage() {
+            localStorage.clear();
+            console.log('[TEST] localStorage cleared');
+            updateStatus();
+        }
+        
+        function setLightInStorage() {
+            localStorage.setItem('theme', 'light');
+            console.log('[TEST] Set theme=light in localStorage');
+            updateStatus();
+        }
+        
+        function checkCurrentState() {
+            console.log('[TEST] === CURRENT STATE CHECK ===');
+            console.log('Document element:', document.documentElement);
+            console.log('Data-theme attribute:', document.documentElement.getAttribute('data-theme'));
+            console.log('LocalStorage theme:', localStorage.getItem('theme'));
+            console.log('themeManager available:', !!window.themeManager);
+            console.log('settingsHelpers available:', !!window.settingsHelpers);
+            
+            if (window.settingsHelpers) {
+                console.log('settingsHelpers.getTheme():', window.settingsHelpers.getTheme());
+            }
+            
+            updateStatus();
+        }
+        
+        function simulatePageLoad() {
+            console.log('[TEST] === SIMULATING PAGE LOAD LOGIC ===');
+            
+            // Simulate the inline script logic
+            try {
+                const savedTheme = localStorage.getItem('theme') || 'auto';
+                let actualTheme = savedTheme;
+                
+                console.log(`[TEST] Saved theme from localStorage: "${savedTheme}"`);
+                
+                if (savedTheme === 'auto') {
+                    actualTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                
+                console.log(`[TEST] Actual theme to apply: "${actualTheme}"`);
+                
+                document.documentElement.setAttribute('data-theme', actualTheme);
+                
+                console.log(`[TEST] Applied data-theme: "${actualTheme}"`);
+                
+                setTimeout(updateStatus, 100);
+                
+            } catch (error) {
+                console.error('[TEST] Error in page load simulation:', error);
+            }
+        }
+        
+        // Initialize status
+        setTimeout(() => {
+            updateStatus();
+            checkCurrentState();
+        }, 100);
+        
+        // Update status every 2 seconds
+        setInterval(updateStatus, 2000);
+    </script>
+</body>
+
+</html>

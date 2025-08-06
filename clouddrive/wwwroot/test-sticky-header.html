@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticky Header Scroll Test</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            gap: 16px;
+            min-height: 56px;
+        }
+
+        .header-navigation {
+            border-bottom: 1px solid #f0f0f0;
+            background: rgba(248, 249, 250, 0.8);
+        }
+
+        .header-controls {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            outline: none;
+            position: relative;
+        }
+
+        .content:focus {
+            outline: 2px solid #007acc;
+            outline-offset: -2px;
+        }
+
+        .content:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .item {
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .item:hover {
+            background: #f8f9fa;
+            border-color: #007acc;
+        }
+
+        .item:focus {
+            outline: 2px solid #007acc;
+            outline-offset: 2px;
+            background: #e3f2fd;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 16px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #f6f8fa;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <strong>Test Instructions:</strong><br>
+        1. Click on the content area<br>
+        2. Use arrow keys to navigate<br>
+        3. The header should stay visible!
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-row header-navigation">
+                <div>🏠 Home / Documents / Projects</div>
+                <input type="text" class="search-input" placeholder="Search files...">
+                <button class="btn">Upload</button>
+            </div>
+            <div class="header-row header-controls">
+                <div>42 items selected</div>
+                <button class="btn">Download</button>
+                <button class="btn">Delete</button>
+                <button class="btn">Grid View</button>
+            </div>
+        </div>
+
+        <div class="content" tabindex="0" id="content">
+            <!-- Generate many items to test scrolling -->
+        </div>
+    </div>
+
+    <script>
+        // Generate test items
+        const content = document.getElementById('content');
+        for (let i = 1; i <= 100; i++) {
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.tabIndex = 0;
+            item.textContent = `📄 Test File ${i.toString().padStart(3, '0')}.txt`;
+            content.appendChild(item);
+        }
+
+        // Add keyboard navigation
+        content.addEventListener('keydown', (e) => {
+            const items = Array.from(content.querySelectorAll('.item'));
+            const currentIndex = items.indexOf(document.activeElement);
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = Math.min(currentIndex + 1, items.length - 1);
+                items[nextIndex].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIndex = Math.max(currentIndex - 1, 0);
+                items[prevIndex].focus();
+            }
+        });
+
+        // Focus first item when content is focused
+        content.addEventListener('focus', (e) => {
+            if (e.target === content) {
+                const firstItem = content.querySelector('.item');
+                if (firstItem) firstItem.focus();
+            }
+        });
+    </script>
+</body>
+</html>

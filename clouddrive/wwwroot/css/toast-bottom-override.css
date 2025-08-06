@@ -1,0 +1,49 @@
+/* Force all toast containers to bottom - Override any other positioning */
+.toast-container {
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    right: 0 !important;
+    left: auto !important;
+    padding: 1rem !important;
+    z-index: 99999 !important;
+}
+
+/* Also override any toast-overlay classes to bottom */
+.toast-overlay {
+    position: fixed !important;
+    bottom: 1rem !important;
+    top: auto !important;
+    right: 1rem !important;
+    left: auto !important;
+    z-index: 99999 !important;
+}
+
+/* Override Bootstrap's default toast container positioning */
+.position-fixed.top-0.end-0 {
+    top: auto !important;
+    bottom: 0 !important;
+}
+
+/* Override any top positioning for toast containers specifically */
+.toast-container.position-fixed.top-0,
+.toast-container.top-0,
+div.top-0.toast-container {
+    top: auto !important;
+    bottom: 0 !important;
+}
+
+/* Ensure toasts stack from bottom up */
+.toast-container > .toast {
+    margin-bottom: 0.75rem !important;
+}
+
+.toast-container > .toast:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Override any programmatically set top styles */
+.toast-container[style*="top"] {
+    top: auto !important;
+    bottom: 0 !important;
+}

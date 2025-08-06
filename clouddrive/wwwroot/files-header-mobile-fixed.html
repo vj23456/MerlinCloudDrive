@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files Header - Mobile Fixed Design</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .mockup-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .device-preview {
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .device-header {
+            background: #374151;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .device-content {
+            padding: 0;
+        }
+
+        /* Mobile Layout - Fixed Design */
+        .files-header-mobile {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Mobile Navigation Row */
+        .mobile-nav-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-breadcrumb {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            min-width: 0;
+        }
+
+        .mobile-breadcrumb .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .mobile-breadcrumb .breadcrumb-separator {
+            color: #94a3b8;
+            margin: 0 4px;
+        }
+
+        .mobile-breadcrumb .breadcrumb-current {
+            color: #1e293b;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mobile-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .mobile-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            background: white;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .mobile-btn:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .mobile-btn.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .mobile-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        /* Mobile Control Row */
+        .mobile-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            gap: 12px;
+        }
+
+        .mobile-left-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mobile-item-count {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .mobile-selection-info {
+            font-size: 13px;
+            color: #059669;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mobile-right-controls {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .mobile-view-toggle {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 1px;
+        }
+
+        .mobile-view-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .mobile-view-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Mobile Search Overlay */
+        .mobile-search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .mobile-search-overlay.active {
+            display: block;
+        }
+
+        .mobile-search-content {
+            background: white;
+            padding: 20px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .mobile-search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f8fafc;
+        }
+
+        .mobile-search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Mobile Action Bar (for selections) */
+        .mobile-action-bar {
+            background: rgba(59, 130, 246, 0.1);
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 16px;
+            display: none;
+        }
+
+        .mobile-action-bar.active {
+            display: block;
+        }
+
+        .mobile-action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .mobile-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            background: white;
+            color: #475569;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-action-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .mobile-action-btn.danger {
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.2);
+        }
+
+        .mobile-action-btn.danger:hover {
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        /* Desktop Layout for Comparison */
+        .files-header-desktop {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .desktop-nav-row {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            gap: 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .desktop-breadcrumb {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .desktop-search {
+            flex: 0 0 300px;
+            position: relative;
+        }
+
+        .desktop-search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f8fafc;
+        }
+
+        .desktop-search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .desktop-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .desktop-actions {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .desktop-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            background: white;
+            color: #475569;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .desktop-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .desktop-btn.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .desktop-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            gap: 24px;
+        }
+
+        .desktop-left-controls {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .desktop-item-count {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .desktop-right-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .desktop-view-toggle {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .desktop-view-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .desktop-view-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            .desktop-preview {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-preview {
+                display: none;
+            }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        .improvement-note {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #0c4a6e;
+        }
+
+        .improvement-note h4 {
+            margin-bottom: 8px;
+            color: #0c4a6e;
+            font-weight: 600;
+        }
+
+        .improvement-note ul {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-container">
+        <h1 class="section-title">Files Header Design - Mobile Fixed</h1>
+        
+        <div class="improvement-note">
+            <h4>🔧 Mobile Layout Improvements:</h4>
+            <ul>
+                <li><strong>Clean Navigation:</strong> Simplified breadcrumb with better truncation</li>
+                <li><strong>Action Organization:</strong> Primary actions (upload, new folder) grouped together</li>
+                <li><strong>Better Controls:</strong> Separated file count and view controls</li>
+                <li><strong>Selection State:</strong> Dedicated action bar for selected files</li>
+                <li><strong>Search Overlay:</strong> Full-screen search experience on mobile</li>
+                <li><strong>Touch-Friendly:</strong> Larger touch targets (36px minimum)</li>
+            </ul>
+        </div>
+
+        <!-- Mobile Preview -->
+        <div class="device-preview mobile-preview">
+            <div class="device-header">📱 Mobile (375px)</div>
+            <div class="device-content">
+                <!-- Mobile Header -->
+                <div class="files-header-mobile">
+                    <!-- Navigation Row -->
+                    <div class="mobile-nav-row">
+                        <div class="mobile-breadcrumb">
+                            <div class="breadcrumb-item">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <span class="breadcrumb-separator">/</span>
+                            <div class="breadcrumb-item">Movies</div>
+                            <span class="breadcrumb-separator">/</span>
+                            <div class="breadcrumb-current">4K特效宇宙Remux</div>
+                        </div>
+                        <div class="mobile-actions">
+                            <button class="mobile-btn" title="Search">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="mobile-btn primary" title="Upload">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="mobile-btn" title="New Folder">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Control Row -->
+                    <div class="mobile-control-row">
+                        <div class="mobile-left-controls">
+                            <div class="mobile-item-count">23 items</div>
+                            <div class="mobile-selection-info">
+                                <i class="fas fa-check-circle"></i>
+                                1 selected
+                            </div>
+                        </div>
+                        <div class="mobile-right-controls">
+                            <div class="mobile-view-toggle">
+                                <button class="mobile-view-btn active" title="Grid View">
+                                    <i class="fas fa-th-large"></i>
+                                </button>
+                                <button class="mobile-view-btn" title="List View">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="mobile-view-btn" title="Waterfall View">
+                                    <i class="fas fa-images"></i>
+                                </button>
+                            </div>
+                            <button class="mobile-btn" title="Properties">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar (shown when files are selected) -->
+                    <div class="mobile-action-bar active">
+                        <div class="mobile-action-buttons">
+                            <button class="mobile-action-btn">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="mobile-action-btn">
+                                <i class="fas fa-play"></i>
+                                Play
+                            </button>
+                            <button class="mobile-action-btn danger">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample content -->
+                <div style="padding: 16px; background: #f8fafc; height: 200px;">
+                    <div style="text-align: center; color: #64748b; padding-top: 80px;">
+                        Files grid content would appear here
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Preview -->
+        <div class="device-preview desktop-preview">
+            <div class="device-header">🖥️ Desktop (1200px)</div>
+            <div class="device-content">
+                <!-- Desktop Header -->
+                <div class="files-header-desktop">
+                    <!-- Navigation Row -->
+                    <div class="desktop-nav-row">
+                        <div class="desktop-breadcrumb">
+                            <div class="breadcrumb-item">
+                                <i class="fas fa-home"></i>
+                                <span>Home</span>
+                            </div>
+                            <span class="breadcrumb-separator">/</span>
+                            <div class="breadcrumb-item">Movies</div>
+                            <span class="breadcrumb-separator">/</span>
+                            <div class="breadcrumb-current">4K特效宇宙Remux</div>
+                        </div>
+                        <div class="desktop-search">
+                            <i class="fas fa-search desktop-search-icon"></i>
+                            <input type="text" class="desktop-search-input" placeholder="Search files...">
+                        </div>
+                        <div class="desktop-actions">
+                            <button class="desktop-btn primary">
+                                <i class="fas fa-upload"></i>
+                                Upload
+                            </button>
+                            <button class="desktop-btn">
+                                <i class="fas fa-folder-plus"></i>
+                                New Folder
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Control Row -->
+                    <div class="desktop-control-row">
+                        <div class="desktop-left-controls">
+                            <div class="desktop-item-count">23 items</div>
+                            <div class="mobile-selection-info">
+                                <i class="fas fa-check-circle"></i>
+                                1 selected
+                            </div>
+                        </div>
+                        <div class="desktop-right-controls">
+                            <div class="desktop-view-toggle">
+                                <button class="desktop-view-btn active">
+                                    <i class="fas fa-th-large"></i>
+                                    Grid
+                                </button>
+                                <button class="desktop-view-btn">
+                                    <i class="fas fa-list"></i>
+                                    List
+                                </button>
+                                <button class="desktop-view-btn">
+                                    <i class="fas fa-images"></i>
+                                    Waterfall
+                                </button>
+                            </div>
+                            <button class="desktop-btn">
+                                <i class="fas fa-info-circle"></i>
+                                Properties
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample content -->
+                <div style="padding: 24px; background: #f8fafc; height: 200px;">
+                    <div style="text-align: center; color: #64748b; padding-top: 80px;">
+                        Files grid content would appear here
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="improvement-note">
+            <h4>✨ Key Design Improvements:</h4>
+            <ul>
+                <li><strong>Mobile-First:</strong> Clean, organized layout that works on all screen sizes</li>
+                <li><strong>Visual Hierarchy:</strong> Clear separation between navigation and controls</li>
+                <li><strong>Touch-Friendly:</strong> Proper button sizes and spacing for mobile</li>
+                <li><strong>Contextual Actions:</strong> Selection-specific actions appear only when needed</li>
+                <li><strong>Consistent Spacing:</strong> Uniform padding and margins throughout</li>
+                <li><strong>Modern Aesthetics:</strong> Glassmorphism effects and smooth transitions</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

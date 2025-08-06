@@ -1,0 +1,532 @@
+/* Simple & Robust Waterfall Layout Styles - Based on vue-waterfall principles */
+
+.files-waterfall {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    margin: 0;
+    padding: 16px;
+    box-sizing: border-box;
+    /* CSS variable for waterfall item width - default to M size */
+    --waterfall-item-width: 280px;
+    /* Flexbox fallback for browsers without JS */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+/* When JS masonry is active */
+.files-waterfall.js-masonry {
+    display: block;
+}
+
+.waterfall-item {
+    /* Fallback positioning */
+    position: relative;
+    border-radius: 8px;
+    background: var(--bs-card-bg, var(--bs-body-bg, white));
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.125));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease, width 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+    box-sizing: border-box;
+    /* Use CSS variable for width - fallback for flexbox layout */
+    width: var(--waterfall-item-width, 280px);
+    min-width: var(--waterfall-item-width, 280px);
+    /* Default visibility - let JS control opacity */
+    visibility: visible;
+    opacity: 1;
+    /* Add top margin to each item */
+    margin-top: 16px;
+}
+
+/* JS positioned items - also use CSS variable */
+.files-waterfall.js-masonry .waterfall-item {
+    position: absolute;
+    width: var(--waterfall-item-width, 280px);
+}
+
+/* Show items after layout is ready - simplified */
+.waterfall-item {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fade in effect for newly positioned items */
+.waterfall-item.waterfall-positioned {
+    animation: waterfallFadeIn 0.3s ease;
+}
+
+@keyframes waterfallFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.waterfall-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme hover effects */
+:root[data-theme="dark"] .waterfall-item:hover,
+:root[data-bs-theme="dark"] .waterfall-item:hover,
+.theme-dark .waterfall-item:hover,
+[data-bs-theme="dark"] .waterfall-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.waterfall-item.selected {
+    border: 2px solid var(--bs-primary, #007bff);
+    box-shadow: 0 4px 16px rgba(var(--bs-primary-rgb, 0, 123, 255), 0.3);
+}
+
+/* Dark theme selection effects */
+:root[data-theme="dark"] .waterfall-item.selected,
+:root[data-bs-theme="dark"] .waterfall-item.selected,
+.theme-dark .waterfall-item.selected,
+[data-bs-theme="dark"] .waterfall-item.selected {
+    box-shadow: 0 4px 16px rgba(var(--bs-primary-rgb, 77, 171, 247), 0.4);
+}
+
+.waterfall-item.focused {
+    outline: 2px solid var(--bs-primary, #007bff);
+    outline-offset: 2px;
+}
+
+/* Image containers - preserve aspect ratios */
+.waterfall-image {
+    position: relative;
+    width: 100%;
+    background: var(--bs-secondary-bg, #fcfcfd);
+}
+
+.waterfall-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px 8px 0 0;
+    /* This preserves the natural aspect ratio */
+    object-fit: cover;
+    max-width: 100%;
+    min-height: 150px;
+}
+
+.waterfall-img-fallback {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-secondary-bg, #fcfcfd);
+    border-radius: 8px 8px 0 0;
+}
+
+.waterfall-img-placeholder {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-secondary-bg, #fcfcfd);
+    border-radius: 8px 8px 0 0;
+}
+
+/* Overlay for image info */
+.waterfall-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    color: white;
+    padding: 16px 12px 12px;
+    border-radius: 0 0 8px 8px;
+}
+
+.waterfall-file-name {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.waterfall-file-info {
+    font-size: 12px;
+    opacity: 0.9;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Folder items in waterfall */
+.waterfall-folder {
+    padding: 20px;
+    text-align: center;
+    background: var(--bs-secondary-bg, #fcfcfd);
+    border-radius: 8px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.folder-icon {
+    margin-bottom: 12px;
+}
+
+.folder-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+    word-break: break-word;
+    text-align: center;
+    color: var(--bs-body-color, #212529);
+}
+
+.folder-info {
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    text-align: center;
+}
+
+/* Non-image files in waterfall */
+.waterfall-file {
+    padding: 16px;
+    background: var(--bs-secondary-bg, #fcfcfd);
+    border-radius: 8px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-icon-container {
+    flex-shrink: 0;
+    width: 48px;
+    text-align: center;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-details .file-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+    word-break: break-word;
+    color: var(--bs-body-color, #212529);
+}
+
+.file-meta {
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Selection indicator */
+.waterfall-selection {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: var(--bs-primary, #007bff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading state styles */
+.waterfall-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: var(--bs-body-bg, rgba(255, 255, 255, 0.9));
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.files-waterfall.loading .waterfall-item {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* Note: Dark mode support is now handled via CSS custom properties */
+
+/* Theme support for waterfall items - Support both data-theme and data-bs-theme */
+:root[data-theme="dark"] .waterfall-item,
+:root[data-bs-theme="dark"] .waterfall-item,
+.theme-dark .waterfall-item,
+[data-bs-theme="dark"] .waterfall-item {
+    background: var(--bs-secondary-bg, #343a40);
+    border-color: var(--bs-border-color, #495057);
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .waterfall-folder,
+:root[data-bs-theme="dark"] .waterfall-folder,
+.theme-dark .waterfall-folder,
+[data-bs-theme="dark"] .waterfall-folder {
+    background: var(--bs-secondary-bg, #343a40);
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .waterfall-file-folder,
+:root[data-bs-theme="dark"] .waterfall-file-folder,
+.theme-dark .waterfall-file-folder,
+[data-bs-theme="dark"] .waterfall-file-folder {
+    background: var(--bs-secondary-bg, #343a40);
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .waterfall-file,
+:root[data-bs-theme="dark"] .waterfall-file,
+.theme-dark .waterfall-file,
+[data-bs-theme="dark"] .waterfall-file {
+    background: var(--bs-secondary-bg, #343a40);
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .folder-name,
+:root[data-bs-theme="dark"] .folder-name,
+.theme-dark .folder-name,
+[data-bs-theme="dark"] .folder-name {
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .file-folder-name,
+:root[data-bs-theme="dark"] .file-folder-name,
+.theme-dark .file-folder-name,
+[data-bs-theme="dark"] .file-folder-name {
+    color: var(--bs-body-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .waterfall-loading,
+:root[data-bs-theme="dark"] .waterfall-loading,
+.theme-dark .waterfall-loading,
+[data-bs-theme="dark"] .waterfall-loading {
+    background: var(--bs-body-bg, rgba(33, 37, 41, 0.9));
+    color: var(--bs-body-color, #adb5bd);
+}
+
+/* Dark theme secondary colors */
+:root[data-theme="dark"] .folder-info,
+:root[data-bs-theme="dark"] .folder-info,
+.theme-dark .folder-info,
+[data-bs-theme="dark"] .folder-info {
+    color: var(--bs-secondary-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .file-meta,
+:root[data-bs-theme="dark"] .file-meta,
+.theme-dark .file-meta,
+[data-bs-theme="dark"] .file-meta {
+    color: var(--bs-secondary-color, #adb5bd);
+}
+
+:root[data-theme="dark"] .file-folder-info,
+:root[data-bs-theme="dark"] .file-folder-info,
+.theme-dark .file-folder-info,
+[data-bs-theme="dark"] .file-folder-info {
+    color: var(--bs-secondary-color, #adb5bd);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .files-waterfall {
+        padding: 12px;
+    }
+    
+    .waterfall-item {
+        /* More flexible fallback on mobile */
+        width: calc(50% - 8px);
+        min-width: 150px;
+    }
+    
+    .waterfall-overlay {
+        padding: 12px 8px 8px;
+    }
+    
+    .waterfall-file-name {
+        font-size: 13px;
+    }
+    
+    .waterfall-file-info {
+        font-size: 11px;
+    }
+    
+    .waterfall-folder {
+        padding: 16px;
+        min-height: 120px;
+    }
+    
+    .waterfall-file-folder {
+        padding: 16px;
+        min-height: 120px;
+    }
+    
+    .waterfall-file {
+        padding: 12px;
+        min-height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .waterfall-item {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .files-waterfall {
+        padding: 8px;
+        gap: 8px;
+    }
+}
+
+/* Loading indicator styles */
+.waterfall-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bs-border-color, #dee2e6);
+    border-top: 3px solid var(--bs-primary, #0d6efd);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.waterfall-loading p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Progressive loading animations */
+.waterfall-item.loading {
+    opacity: 0.5;
+}
+
+.waterfall-item.loaded {
+    opacity: 1;
+}
+
+/* Animation for initial load */
+@keyframes waterfallFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive column adjustments for better progressive loading */
+@media (min-width: 1200px) {
+    .files-waterfall {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .files-waterfall {
+        padding: 12px;
+        gap: 12px;
+    }
+}
+
+.waterfall-item {
+    animation: waterfallFadeIn 0.3s ease-out;
+}
+
+/* File items displayed as folder-like in waterfall (for non-preview files) */
+.waterfall-file-folder {
+    padding: 20px;
+    text-align: center;
+    background: var(--bs-secondary-bg, #fcfcfd);
+    border-radius: 8px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Auto-expand height based on content */
+    height: auto;
+}
+
+.file-folder-icon {
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.file-folder-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    word-break: break-word;
+    text-align: center;
+    /* Allow text to wrap and expand height */
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
+    color: var(--bs-body-color, #212529);
+}
+
+.file-folder-info {
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    text-align: center;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Dark theme loading indicator */
+:root[data-theme="dark"] .waterfall-loading,
+:root[data-bs-theme="dark"] .waterfall-loading,
+.theme-dark .waterfall-loading,
+[data-bs-theme="dark"] .waterfall-loading {
+    color: var(--bs-secondary-color, #adb5bd);
+}

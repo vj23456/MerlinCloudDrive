@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bootstrap Theme Debug</title>
+    
+    <!-- Load Bootstrap CSS (same as main app) -->
+    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Load our custom CSS (same as main app) -->
+    <link href="css/modern.css" rel="stylesheet" />
+    
+    <style>
+        body {
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .color-box {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+            margin: 5px;
+            border: 1px solid #000;
+        }
+        .variable-list {
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .current-colors {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--bs-border-color, #dee2e6);
+        }
+        .custom-colors {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Test without any theme set initially -->
+    <script>
+        // Clear localStorage to simulate first load
+        localStorage.removeItem('theme');
+    </script>
+
+    <h1>Bootstrap vs Custom Theme Debug</h1>
+    
+    <div class="debug-section">
+        <h3>Current Theme State</h3>
+        <p><strong>data-theme attribute:</strong> <span id="data-theme-value">none</span></p>
+        <p><strong>localStorage theme:</strong> <span id="localstorage-theme">none</span></p>
+        <p><strong>System preference:</strong> <span id="system-preference">unknown</span></p>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Bootstrap CSS Variables</h3>
+        <div class="variable-list">
+            <p>--bs-body-bg: <span id="bs-body-bg">?</span> <span class="color-box" id="bs-body-bg-box"></span></p>
+            <p>--bs-body-color: <span id="bs-body-color">?</span> <span class="color-box" id="bs-body-color-box"></span></p>
+            <p>--bs-secondary-bg: <span id="bs-secondary-bg">?</span> <span class="color-box" id="bs-secondary-bg-box"></span></p>
+        </div>
+        <div class="current-colors">
+            This div uses Bootstrap variables (--bs-body-bg, --bs-body-color)
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Custom CSS Variables</h3>
+        <div class="variable-list">
+            <p>--bg-secondary: <span id="bg-secondary">?</span> <span class="color-box" id="bg-secondary-box"></span></p>
+            <p>--text-primary: <span id="text-primary">?</span> <span class="color-box" id="text-primary-box"></span></p>
+            <p>--border-color: <span id="border-color">?</span> <span class="color-box" id="border-color-box"></span></p>
+        </div>
+        <div class="custom-colors">
+            This div uses our custom variables (--bg-secondary, --text-primary)
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Actions</h3>
+        <button onclick="setTheme('light')">Set Light Theme</button>
+        <button onclick="setTheme('dark')">Set Dark Theme</button>
+        <button onclick="setTheme('auto')">Set Auto Theme</button>
+        <button onclick="clearTheme()">Clear Theme</button>
+        <button onclick="location.reload()">Reload Page</button>
+    </div>
+
+    <script>
+        function updateDebugInfo() {
+            const htmlElement = document.documentElement;
+            const computedStyle = getComputedStyle(htmlElement);
+            
+            // Update theme state
+            document.getElementById('data-theme-value').textContent = htmlElement.getAttribute('data-theme') || 'none';
+            document.getElementById('localstorage-theme').textContent = localStorage.getItem('theme') || 'none';
+            document.getElementById('system-preference').textContent = 
+                window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            
+            // Update Bootstrap variables
+            const bsBodyBg = computedStyle.getPropertyValue('--bs-body-bg').trim();
+            const bsBodyColor = computedStyle.getPropertyValue('--bs-body-color').trim();
+            const bsSecondaryBg = computedStyle.getPropertyValue('--bs-secondary-bg').trim();
+            
+            document.getElementById('bs-body-bg').textContent = bsBodyBg || 'undefined';
+            document.getElementById('bs-body-color').textContent = bsBodyColor || 'undefined';
+            document.getElementById('bs-secondary-bg').textContent = bsSecondaryBg || 'undefined';
+            
+            if (bsBodyBg) document.getElementById('bs-body-bg-box').style.backgroundColor = bsBodyBg;
+            if (bsBodyColor) document.getElementById('bs-body-color-box').style.backgroundColor = bsBodyColor;
+            if (bsSecondaryBg) document.getElementById('bs-secondary-bg-box').style.backgroundColor = bsSecondaryBg;
+            
+            // Update custom variables
+            const bgSecondary = computedStyle.getPropertyValue('--bg-secondary').trim();
+            const textPrimary = computedStyle.getPropertyValue('--text-primary').trim();
+            const borderColor = computedStyle.getPropertyValue('--border-color').trim();
+            
+            document.getElementById('bg-secondary').textContent = bgSecondary || 'undefined';
+            document.getElementById('text-primary').textContent = textPrimary || 'undefined';
+            document.getElementById('border-color').textContent = borderColor || 'undefined';
+            
+            if (bgSecondary) document.getElementById('bg-secondary-box').style.backgroundColor = bgSecondary;
+            if (textPrimary) document.getElementById('text-primary-box').style.backgroundColor = textPrimary;
+            if (borderColor) document.getElementById('border-color-box').style.backgroundColor = borderColor;
+        }
+        
+        function setTheme(theme) {
+            
+            // Save to localStorage
+            localStorage.setItem('theme', theme);
+            
+            // Calculate actual theme
+            let actualTheme = theme;
+            if (theme === 'auto') {
+                actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            
+            // Set data-theme attribute
+            document.documentElement.setAttribute('data-theme', actualTheme);
+            
+            
+            // Update debug info
+            setTimeout(updateDebugInfo, 100);
+        }
+        
+        function clearTheme() {
+            localStorage.removeItem('theme');
+            document.documentElement.removeAttribute('data-theme');
+            setTimeout(updateDebugInfo, 100);
+        }
+        
+        // Simulate the same initialization as in the main app
+        function initializeTheme() {
+            
+            try {
+                const savedTheme = localStorage.getItem('theme') || 'auto';
+                let actualTheme = savedTheme;
+                
+                if (savedTheme === 'auto') {
+                    actualTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                
+                document.documentElement.setAttribute('data-theme', actualTheme);
+                
+                
+            } catch (error) {
+                console.warn('[DEBUG] Error initializing theme:', error);
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
+        
+        // Initialize theme on page load
+        initializeTheme();
+        
+        // Update debug info after a short delay to let CSS settle
+        setTimeout(updateDebugInfo, 200);
+    </script>
+</body>
+
+</html>

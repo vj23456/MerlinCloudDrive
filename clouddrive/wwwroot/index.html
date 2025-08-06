@@ -3,46 +3,717 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>CloudDrive2</title>
-    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
     <base href="/" />
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- EARLY ERROR SUPPRESSION - Must be first script to catch all network errors -->
+    <script>
+        // Set up error suppression as early as possible to catch errors during page load
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorMessage = String(message || '');
+            const sourceFile = String(source || '');
+            
+            // Suppress all network and Blazor framework related errors
+            if (errorMessage.includes('TypeError: Failed to fetch') ||
+                errorMessage.includes('TypeError: network error') ||
+                errorMessage.includes('NetworkError') ||
+                errorMessage.includes('ERR_CONNECTION_REFUSED') ||
+                errorMessage.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') ||
+                errorMessage.includes('ERR_NETWORK') ||
+                errorMessage.includes('http_wasm') ||
+                errorMessage.includes('MONO_WASM') ||
+                errorMessage.includes('fetch') ||
+                sourceFile.includes('_framework/') ||
+                sourceFile.includes('dotnet.js') ||
+                sourceFile.includes('blazor.webassembly.js')) {
+                
+
+                return true; // Suppress the error completely
+            }
+            
+            return false; // Allow other errors
+        };
+        
+        // Early promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            const message = String(event.reason && event.reason.message ? event.reason.message : event.reason);
+            
+            if (message.includes('TypeError: Failed to fetch') ||
+                message.includes('TypeError: network error') ||
+                message.includes('NetworkError') ||
+                message.includes('ERR_CONNECTION_REFUSED') ||
+                message.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') ||
+                message.includes('ERR_NETWORK') ||
+                message.includes('http_wasm') ||
+                message.includes('MONO_WASM') ||
+                message.includes('fetch')) {
+                
+
+                event.preventDefault();
+                return true;
+            }
+            
+            return false;
+        });
+    </script>
+    
+    <!-- Bootstrap 5 CSS (Local) -->
+    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons (Local) -->
+    <link href="lib/fontawesome/fontawesome-local.min.css" rel="stylesheet">
+    
+    <!-- Flag Icons CSS for country flags (Local) -->
+    <link href="lib/flag-icons/flag-icons.min.css" rel="stylesheet">
+    
+    <!-- Initial theme styles to prevent flash - MUST be after Bootstrap -->
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        #app {
+            min-height: 100vh;
+        }
+        
+        /* Override Bootstrap theme variables and ensure light theme is applied by default */
+        /* IMPORTANT: These must have higher specificity than Bootstrap */
+        html:not([data-theme]),
+        html[data-theme="light"],
+        :root {
+            /* Override Bootstrap variables for light theme */
+            --bs-body-bg: #f8f9fa !important;
+            --bs-body-color: #212529 !important;
+            --bs-secondary-bg: #e9ecef !important;
+            --bs-tertiary-bg: #f8f9fa !important;
+            
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+        }
+        
+        html:not([data-theme]) body,
+        html[data-theme="light"] body,
+        body {
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+        }
+        
+        html:not([data-theme]) #app,
+        html[data-theme="light"] #app,
+        #app {
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+        }
+        
+        /* Dark theme */
+        html[data-theme="dark"] {
+            /* Override Bootstrap variables for dark theme */
+            --bs-body-bg: #343a40 !important;
+            --bs-body-color: #f8f9fa !important;
+            --bs-secondary-bg: #495057 !important;
+            --bs-tertiary-bg: #2b3035 !important;
+            
+            background-color: #343a40 !important;
+            color: #f8f9fa !important;
+        }
+        
+        html[data-theme="dark"] body {
+            background-color: #343a40 !important;
+            color: #f8f9fa !important;
+        }
+        
+        html[data-theme="dark"] #app {
+            background-color: #343a40 !important;
+            color: #f8f9fa !important;
+        }
+    </style>
+    
+    <!-- Custom Modern Styles - Load AFTER Bootstrap and inline styles -->
+    <link href="css/modern.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
-    <link href="CloudDriveWasm.styles.css" rel="stylesheet" />
-    <link href="css/clouddrive.css" rel="stylesheet" />
-    <link href="manifest.json" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link href="css/waterfall.css" rel="stylesheet" />
+    <link href="css/waterfall-dropdown.css" rel="stylesheet" />
+    <link href="css/mobile-viewport.css" rel="stylesheet" />
+    
+    <!-- PhotoSwipe CSS -->
+    <link href="photoswipe/photoswipe.css" rel="stylesheet" />
+    <link href="photoswipe/default-skin/default-skin.css" rel="stylesheet" />
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-    <link rel="stylesheet" href="/css/font-awesome/css/all.min.css" />
-    <!--<link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />-->
-    <!--<script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=MspxDBhWGKBjoh4Q97YH6O1jUntcaSVn"></script>-->
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    
+    <!-- Theme colors for browser UI -->
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="msapplication-TileColor" content="#1e40af" />
+    <meta name="msapplication-config" content="browserconfig.xml" />
+    
+    <link href="CloudDriveModern.styles.css" rel="stylesheet" />
+    
+    <!-- Chart.js for performance monitoring (Local) -->
+    <script src="lib/chartjs/chart.umd.js"></script>
 </head>
 
 <body>
-    <div id="app">Loading...</div>
+    <!-- Set waterfall size immediately after CSS loads to prevent flickering -->
+    <script>
+        (function() {
+            try {
 
-    <!--<div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>-->
-    <script src="_framework/blazor.webassembly.js"></script>
-    <!--<script>navigator.serviceWorker.register('service-worker.js');</script>-->
-    <script src="sw-registrator.js"></script>
-    <!--<script src="_content/Blazored.Modal/blazored.modal.js"></script>-->
-    <script src="js/myjs.js"></script>
-    <script src="js/clouddrive.js"></script>
-    <script src="js/myphotoswipe.js"></script>
-    <script src="js/split.min.js"></script>
-    <script src="js/hammer.min.js"></script>
-    <script src="js/html5-qrcode-v2.js"></script>
-    <script src="js/qrcode.js"></script>
-    <script src="js/xterm/xterm.js"></script>
-    <link rel="stylesheet" href="photoswipe/photoswipe.css">
-    <link rel="stylesheet" href="photoswipe/default-skin/default-skin.css">
+                
+                // Debug: Check localStorage before reading theme
+
+                
+                // Get the raw theme value
+                const rawTheme = localStorage.getItem('theme');
+
+                
+                // Initialize theme first (affects visual appearance)
+                const savedTheme = rawTheme || 'auto';
+                let actualTheme = savedTheme;
+                
+
+                
+                // Check system preference
+                const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                
+                if (savedTheme === 'auto') {
+                    actualTheme = systemDarkMode ? 'dark' : 'light';
+
+                } else {
+
+                }
+                
+
+
+                
+                // Set data-theme attribute on documentElement
+                document.documentElement.setAttribute('data-theme', actualTheme);
+                
+                // Force immediate CSS recalculation
+                document.documentElement.offsetHeight;
+                
+                // Verify the attribute was set correctly
+                const appliedTheme = document.documentElement.getAttribute('data-theme');
+
+                
+                // CRITICAL: Force body styles immediately as backup
+                if (actualTheme === 'light') {
+                    document.body.style.setProperty('background-color', '#f8f9fa', 'important');
+                    document.body.style.setProperty('color', '#212529', 'important');
+
+                } else {
+                    document.body.style.setProperty('background-color', '#343a40', 'important');
+                    document.body.style.setProperty('color', '#f8f9fa', 'important');
+
+                }
+                
+                // Double-check by reading computed style after a small delay
+                setTimeout(() => {
+                    const computedBg = getComputedStyle(document.body).backgroundColor;
+                    const computedColor = getComputedStyle(document.body).color;
+
+
+                    
+                    const bsBodyBg = getComputedStyle(document.documentElement).getPropertyValue('--bs-body-bg').trim();
+                    const bsBodyColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-body-color').trim();
+
+                }, 100);
+                
+                // Get saved size from localStorage synchronously
+                const savedSize = localStorage.getItem('waterfall-size');
+                const isMobile = window.innerWidth <= 768;
+                
+                // Size presets (must match the ones in navigation-helpers.js)
+                const sizePresets = {
+                    'XS': { width: 180, mobileOnly: true },
+                    'S': { width: 220, mobileOnly: true },
+                    'M': { width: 280 },
+                    'L': { width: 350 },
+                    'XL': { width: 450 }
+                };
+                
+                let defaultSize = 'M'; // Desktop default
+                
+                if (savedSize && sizePresets[savedSize]) {
+                    const preset = sizePresets[savedSize];
+                    // If saved size is mobile-only but we're on desktop, fall back to M
+                    if (preset.mobileOnly && !isMobile) {
+                        defaultSize = 'M';
+                    } else {
+                        defaultSize = savedSize;
+                    }
+                } else {
+                    // No saved preference, use responsive defaults
+                    defaultSize = isMobile ? 'XS' : 'M';
+                }
+                
+                const width = sizePresets[defaultSize]?.width || 280;
+                
+                // Set CSS custom property immediately after CSS loads
+                document.documentElement.style.setProperty('--waterfall-item-width', width + 'px');
+
+                
+                // Log view mode and language for reference (will be handled by Blazor)
+                const savedViewMode = localStorage.getItem('view-mode') || 'grid';
+                const savedLanguage = localStorage.getItem('culture') || 'auto';
+
+
+                
+            } catch (error) {
+                // Fallback to light theme
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.style.setProperty('--waterfall-item-width', '280px');
+                console.warn('Error in body settings initialization:', error);
+            }
+        })();
+    </script>
+    
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+      <!-- Bootstrap 5 JS (Local) -->
+    <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>    <!-- Custom JavaScript utilities -->
+    <script src="js/mobile-detection.js"></script>
+    <script src="js/qrcode-generator.js"></script>
+    <script src="js/clipboard-helpers.js"></script>
+    <!-- OAuth handler must load first for immediate OAuth callback detection -->
+    <script src="js/oauth-handler.js"></script>
+    <!-- PhotoSwipe Scripts -->
     <script src="photoswipe/photoswipe.min.js"></script>
-    <script src="photoswipe/photoswipe-ui-default.js"></script>
+    <script src="photoswipe/photoswipe-ui-default.min.js"></script>
+    <script src="js/photoswipe-wheel-navigation.js"></script>
+    <script src="js/photoswipe-helpers.js"></script>
+    <script src="js/subtitle-proxy.js"></script>
+    <!-- Modular JavaScript files -->
+    <script src="js/navigation-helpers.js"></script>
+    <script src="js/sidebar-resizer.js"></script>
+    <script src="js/container-size-helper.js"></script>
+    <!-- Initialize waterfall size CSS immediately to prevent flickering -->
+    <script>
+        // Set waterfall size CSS property immediately when page loads
+        if (window.waterfallSizeHelpers && typeof window.waterfallSizeHelpers.initializeCSSImmediately === 'function') {
+            window.waterfallSizeHelpers.initializeCSSImmediately();
+        }
+    </script>
+    <script src="js/breadcrumb-helpers.js"></script>
+    <script src="js/qr-code-helpers.js"></script>
+    <script src="js/chart-helpers.js"></script>
+    <script src="js/oauth-service.js"></script>
+    <!-- Grid helper (now contains only grid-specific functionality) -->
+    <script src="js/grid-helper.js"></script>
+    <script src="js/waterfall.js"></script>
+    <!-- String list editor helper for focus management -->
+    <script src="js/string-list-editor-helpers.js"></script>
+    <!-- Responsive header helper for overflow menu -->
+    <script src="js/responsive-header-helper.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        window.blazorCulture = {
+            get: () => window.localStorage['BlazorCulture'],
+            set: (value) => window.localStorage['BlazorCulture'] = value,
+              // Media query and resize detection
+            matchMedia: (query) => window.matchMedia(query).matches,
+            
+            addResizeListener: (dotNetReference) => {
+                const handler = () => {
+                    dotNetReference.invokeMethodAsync('OnWindowResize');
+                };
+                window.addEventListener('resize', handler);
+                // Store reference for cleanup if needed
+                window.blazorResizeHandler = handler;
+                window.blazorDotNetRef = dotNetReference;
+            },
+            
+            removeResizeListener: () => {
+                if (window.blazorResizeHandler) {
+                    window.removeEventListener('resize', window.blazorResizeHandler);
+                    window.blazorResizeHandler = null;
+                }
+                if (window.blazorDotNetRef) {
+                    window.blazorDotNetRef.dispose();
+                    window.blazorDotNetRef = null;
+                }
+            }
+        };
+
+        // Position mobile dropdown using fixed positioning to escape overflow constraints
+        window.positionMobileDropdown = function() {
+
+            
+            const dropdownSelected = document.querySelector('.mobile-tab-selector-header .dropdown-selected');
+            const dropdownOptions = document.querySelector('.mobile-tab-selector-header .dropdown-options');
+            
+            console.log('Dropdown elements found:', {
+                selected: !!dropdownSelected,
+                options: !!dropdownOptions
+            });
+            
+            if (dropdownSelected && dropdownOptions) {
+                const rect = dropdownSelected.getBoundingClientRect();
+                
+                // Position the dropdown just below the selector
+                dropdownOptions.style.position = 'fixed';
+                dropdownOptions.style.top = (rect.bottom + 2) + 'px';
+                dropdownOptions.style.left = rect.left + 'px';
+                dropdownOptions.style.width = rect.width + 'px';
+                dropdownOptions.style.right = 'auto';
+                
+                console.log('Mobile dropdown positioned:', {
+                    top: rect.bottom + 2,
+                    left: rect.left,
+                    width: rect.width
+                });
+            } else {
+
+
+
+            }
+        };          // Enhanced matchMedia function for Blazor
+
+        // Touch event handling for iOS Safari hover behavior fix
+        
+        // Focus management helpers
+        window.focusElement = (elementId) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.focus();
+                // Don't use scrollIntoView as it can scroll the wrong container
+            }
+            return element !== null;
+        };
+        
+        window.elementExists = (elementId) => {
+            return document.getElementById(elementId) !== null;
+        };
+
+        // Smart scroll function that respects the files-content scroll container
+        window.scrollToElement = (elementId) => {
+            const element = document.getElementById(elementId);
+            if (!element) return false;
+
+            // Find the files-content scroll container
+            const scrollContainer = document.querySelector('.files-content');
+            if (!scrollContainer) {
+                // Fallback to regular scrollIntoView if container not found
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return true;
+            }
+
+            // Get element and container positions
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = scrollContainer.getBoundingClientRect();
+
+            // Calculate if element is visible within the container
+            const isVisible = elementRect.top >= containerRect.top && 
+                            elementRect.bottom <= containerRect.bottom;
+
+            if (!isVisible) {
+                // Calculate scroll position needed to center the element in the container
+                const elementTop = element.offsetTop;
+                const containerHeight = scrollContainer.clientHeight;
+                const elementHeight = element.offsetHeight;
+                
+                // Calculate scroll position to center the element
+                const scrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2);
+                
+                // Smooth scroll within the container only
+                scrollContainer.scrollTo({
+                    top: Math.max(0, scrollTop),
+                    behavior: 'auto'
+                });
+            }
+
+            return true;
+        };
+
+        // Fast focus without scrolling (for performance)
+        window.focusElementFast = (elementId) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.focus({ preventScroll: true });
+                return true;
+            }
+            return false;
+        };
+        
+        window.blazorMatchMedia = (query) => {
+            const mediaQuery = window.matchMedia(query);
+            return mediaQuery.matches;
+        };
+          // Theme Management
+        window.themeManager = {
+            setTheme: (theme) => {
+                const root = document.documentElement;
+                const body = document.body;
+                
+                // Remove existing theme classes
+                body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+                
+                if (theme === 'dark') {
+                    body.classList.add('theme-dark');
+                    root.setAttribute('data-theme', 'dark');
+                    root.setAttribute('data-bs-theme', 'dark');
+                } else if (theme === 'light') {
+                    body.classList.add('theme-light');
+                    root.setAttribute('data-theme', 'light');
+                    root.setAttribute('data-bs-theme', 'light');
+                } else { // auto
+                    body.classList.add('theme-auto');
+                    // Use the native matchMedia to detect system preference
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    const themeValue = prefersDark ? 'dark' : 'light';
+                    root.setAttribute('data-theme', themeValue);
+                    root.setAttribute('data-bs-theme', themeValue);
+                }
+            },
+            
+            // Initialize theme on page load
+            init: () => {
+                const savedTheme = localStorage.getItem('theme') || 'auto';
+                window.themeManager.setTheme(savedTheme);
+                
+                // Listen for system theme changes when in auto mode
+                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                const handleThemeChange = (e) => {
+                    const currentTheme = localStorage.getItem('theme') || 'auto';
+                    if (currentTheme === 'auto') {
+                        window.themeManager.setTheme('auto');
+                    }
+                };
+                
+                // Use the newer addEventListener if available, fallback to addListener
+                if (mediaQuery.addEventListener) {
+                    mediaQuery.addEventListener('change', handleThemeChange);
+                } else {
+                    mediaQuery.addListener(handleThemeChange);
+                }
+            }
+        };
+        
+        // Initialize theme immediately
+        window.themeManager.init();
+    </script>
+    
+    <!-- Global Error Handler for Network Errors -->
+    <script>
+        // Catch unhandled JavaScript errors
+        window.addEventListener('error', function(event) {
+            const error = event.error;
+            const message = event.message || (error && error.message) || '';
+            
+            // Check if this is a network-related error that we want to suppress
+            if (message.includes('TypeError: Failed to fetch') || 
+                message.includes('NetworkError') ||
+                message.includes('ERR_CONNECTION_REFUSED') ||
+                message.includes('ERR_NETWORK') ||
+                (error && error.name === 'TypeError' && error.message.includes('fetch'))) {
+                
+
+                event.preventDefault(); // Prevent the error from bubbling up
+                return true; // Indicate the error was handled
+            }
+            
+            // Let other errors bubble up normally
+            return false;
+        });
+        
+        // COMPREHENSIVE ERROR SUPPRESSION FOR NETWORK ERRORS
+        // This must be very early to catch all possible error scenarios
+        
+        // 1. Override global onerror handler before any other scripts load
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorMessage = message || (error && error.message) || '';
+            
+            // Suppress all network-related errors aggressively
+            if (typeof errorMessage === 'string' && (
+                errorMessage.includes('TypeError: Failed to fetch') ||
+                errorMessage.includes('TypeError: network error') ||
+                errorMessage.includes('NetworkError') ||
+                errorMessage.includes('ERR_CONNECTION_REFUSED') ||
+                errorMessage.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') ||
+                errorMessage.includes('ERR_NETWORK') ||
+                errorMessage.includes('http_wasm') ||
+                errorMessage.includes('MONO_WASM') ||
+                errorMessage.includes('fetch') ||
+                (source && source.includes('_framework/')) ||
+                (source && source.includes('dotnet.js')))) {
+                
+
+                return true; // Suppress the error
+            }
+            
+            return false; // Let other errors show
+        };
+
+        // 2. Global error handler to catch uncaught errors (additional layer)
+        window.addEventListener('error', function(event) {
+            const error = event.error;
+            const message = error && error.message ? error.message : event.message;
+            const filename = event.filename || '';
+            
+            // More aggressive pattern matching for network errors
+            if (typeof message === 'string' && (
+                message.includes('TypeError: Failed to fetch') || 
+                message.includes('TypeError: network error') ||
+                message.includes('NetworkError') ||
+                message.includes('ERR_CONNECTION_REFUSED') ||
+                message.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') ||
+                message.includes('ERR_NETWORK') ||
+                message.includes('http_wasm') ||
+                message.includes('MONO_WASM') ||
+                message.includes('fetch') ||
+                filename.includes('_framework/') ||
+                filename.includes('dotnet.js') ||
+                (error && error.name === 'TypeError'))) {
+                
+
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                return true;
+            }
+            
+            return false;
+        }, true); // Use capture phase to catch early
+        
+        // 3. Catch unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            const reason = event.reason;
+            const message = reason && reason.message ? reason.message : String(reason);
+            
+            // Aggressive suppression of network-related promise rejections
+            if (typeof message === 'string' && (
+                message.includes('TypeError: Failed to fetch') || 
+                message.includes('TypeError: network error') ||
+                message.includes('NetworkError') ||
+                message.includes('ERR_CONNECTION_REFUSED') ||
+                message.includes('ERR_INCOMPLETE_CHUNKED_ENCODING') ||
+                message.includes('ERR_NETWORK') ||
+                message.includes('http_wasm') ||
+                message.includes('MONO_WASM') ||
+                message.includes('fetch') ||
+                (reason && reason.name === 'TypeError'))) {
+                
+
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+            
+            return false;
+        }, true); // Use capture phase
+        
+        // 4. Override console.error to suppress MONO_WASM errors in console
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            const message = args.join(' ');
+            
+            // Suppress MONO_WASM and other network-related console errors
+            if (message.includes('MONO_WASM: Error in http_wasm') ||
+                message.includes('TypeError: network error') ||
+                message.includes('Failed to fetch') ||
+                message.includes('ERR_CONNECTION_REFUSED') ||
+                message.includes('ERR_INCOMPLETE_CHUNKED_ENCODING')) {
+
+                return;
+            }
+            
+            originalConsoleError.apply(console, args);
+        };
+        
+        // 5. Additional protection: intercept fetch failures
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            return originalFetch.apply(this, args).catch(error => {
+                // Log but don't re-throw network errors to prevent unhandled rejections
+                if (error.message && (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('network error') ||
+                    error.message.includes('ERR_CONNECTION_REFUSED'))) {
+
+                    throw error; // Still throw for application logic, but logged
+                }
+                throw error;
+            });
+        };
+    </script>
+    
+    <!-- Splitter functionality -->
+    <script src="js/splitter.js"></script>
+    
+    <!-- Additional error suppression before Blazor loads -->
+    <script>
+        // Hook into WebAssembly module loading to suppress network errors
+        if (typeof WebAssembly !== 'undefined' && WebAssembly.instantiate) {
+            const originalInstantiate = WebAssembly.instantiate;
+            WebAssembly.instantiate = function(...args) {
+                return originalInstantiate.apply(this, args).catch(error => {
+                    if (error.message && (
+                        error.message.includes('Failed to fetch') ||
+                        error.message.includes('network error') ||
+                        error.message.includes('ERR_CONNECTION_REFUSED'))) {
+
+                    }
+                    throw error;
+                });
+            };
+        }
+        
+        // Suppress any errors from dotnet.js module loading
+        window.addEventListener('error', function(event) {
+            if (event.filename && (
+                event.filename.includes('dotnet.js') ||
+                event.filename.includes('_framework/') ||
+                event.filename.includes('blazor.webassembly.js'))) {
+
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+        }, true);
+
+        // Files page drag and drop support
+        window.filesPageInstance = null;
+        
+        window.registerFilesPageInstance = function(dotNetRef) {
+            window.filesPageInstance = {
+                dotNetRef: dotNetRef,
+                handleTreeNodeDrop: function(targetPath, dragEvent) {
+                    if (dotNetRef) {
+                        // For tree node drops, we don't need to get drag data from the event
+                        // The dragging files are already tracked in the Files component
+                        dotNetRef.invokeMethodAsync('HandleTreeNodeDrop', targetPath, 'file-move');
+                    }
+                },
+                validateTreeNodeDrop: function(targetPath) {
+                    if (dotNetRef) {
+                        // Validate if this tree node drop is allowed
+                        return dotNetRef.invokeMethodAsync('ValidateTreeNodeDrop', targetPath);
+                    }
+                    return false;
+                }
+            };
+        };
+    </script>
+
+    <!-- Blazor WebAssembly -->
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>

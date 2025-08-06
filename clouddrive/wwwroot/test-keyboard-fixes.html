@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Navigation Fixes Test</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --primary-color-rgb: 0, 102, 204;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-hover: #e9ecef;
+            --text-primary: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --border-light: #e9ecef;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-secondary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Test Layout */
+        .test-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sticky Header */
+        .test-header {
+            background: var(--bg-primary);
+            position: sticky;
+            top: 0;
+            z-index: 101;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            padding: 0 1.25rem;
+            gap: 1rem;
+            min-height: 56px;
+        }
+
+        .header-navigation {
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+        }
+
+        .header-controls {
+            background: var(--bg-primary);
+        }
+
+        .breadcrumb {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            width: 200px;
+        }
+
+        /* Content Area - CRITICAL: This must be the only scrolling container */
+        .test-content {
+            background: var(--bg-primary);
+            padding: 0;
+            margin: 0;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            outline: none;
+            position: relative;
+        }
+
+        /* Grid of items */
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+
+        /* File items */
+        .test-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            outline: none;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .test-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .test-item:focus {
+            background: rgba(var(--primary-color-rgb), 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+        }
+
+        .test-item.focused {
+            background: rgba(var(--primary-color-rgb), 0.15);
+            border-color: var(--primary-color);
+            border-width: 2px;
+        }
+
+        .item-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 200;
+            font-size: 0.875rem;
+            max-width: 300px;
+        }
+
+        .instructions h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 1.2rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-layout">
+        <!-- Sticky Header (like breadcrumb) -->
+        <div class="test-header">
+            <div class="header-row header-navigation">
+                <div class="breadcrumb">📁 Test Folder / Subfolder / Deep Folder</div>
+                <div style="flex: 1;"></div>
+                <input type="text" class="search-input" placeholder="Search files...">
+            </div>
+            <div class="header-row header-controls">
+                <div>View: Grid</div>
+                <div style="flex: 1;"></div>
+                <div>100 items</div>
+            </div>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <div class="test-content" tabindex="0">
+            <div class="test-grid" id="testGrid">
+                <!-- Items will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Panel -->
+    <div class="instructions">
+        <h3>🧪 Keyboard Fix Test</h3>
+        <ul>
+            <li><strong>Arrow Keys:</strong> Navigate items</li>
+            <li><strong>Enter:</strong> Select focused item</li>
+            <li><strong>Focus test-content</strong> first</li>
+        </ul>
+        <p><strong>Expected:</strong> Header stays visible during navigation!</p>
+    </div>
+
+    <script>
+        // Generate test items
+        const grid = document.getElementById('testGrid');
+        for (let i = 1; i <= 100; i++) {
+            const item = document.createElement('div');
+            item.className = 'test-item';
+            item.tabIndex = 0;
+            item.id = `item-${i}`;
+            
+            item.innerHTML = `
+                <div class="item-icon">📄</div>
+                <div class="item-name">Test File ${i}</div>
+            `;
+            
+            grid.appendChild(item);
+        }
+
+        // Use our fixed scroll function
+        window.scrollToElement = (elementId) => {
+            const element = document.getElementById(elementId);
+            if (!element) return false;
+
+            // Find the test-content scroll container
+            const scrollContainer = document.querySelector('.test-content');
+            if (!scrollContainer) {
+                // Fallback to regular scrollIntoView if container not found
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return true;
+            }
+
+            // Get element and container positions
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = scrollContainer.getBoundingClientRect();
+
+            // Calculate if element is visible within the container
+            const isVisible = elementRect.top >= containerRect.top && 
+                            elementRect.bottom <= containerRect.bottom;
+
+            if (!isVisible) {
+                // Calculate scroll position needed to center the element in the container
+                const elementTop = element.offsetTop;
+                const containerHeight = scrollContainer.clientHeight;
+                const elementHeight = element.offsetHeight;
+                
+                // Calculate scroll position to center the element
+                const scrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2);
+                
+                // Smooth scroll within the container only
+                scrollContainer.scrollTo({
+                    top: Math.max(0, scrollTop),
+                    behavior: 'smooth'
+                });
+            }
+
+            return true;
+        };
+
+        // Keyboard navigation
+        let currentFocused = null;
+        const items = Array.from(document.querySelectorAll('.test-item'));
+        const itemsPerRow = Math.floor(grid.offsetWidth / 200); // Approximate
+
+        document.querySelector('.test-content').addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateGrid(itemsPerRow);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateGrid(-itemsPerRow);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    navigateGrid(1);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    navigateGrid(-1);
+                    break;
+                case 'Enter':
+                    if (currentFocused) {
+                        alert(`Selected: ${currentFocused.querySelector('.item-name').textContent}`);
+                    }
+                    break;
+            }
+        });
+
+        function navigateGrid(direction) {
+            const currentIndex = currentFocused ? items.indexOf(currentFocused) : -1;
+            let newIndex;
+
+            if (currentIndex === -1) {
+                newIndex = direction > 0 ? 0 : items.length - 1;
+            } else {
+                newIndex = currentIndex + direction;
+                newIndex = Math.max(0, Math.min(newIndex, items.length - 1));
+            }
+
+            // Clear previous focus
+            if (currentFocused) {
+                currentFocused.classList.remove('focused');
+            }
+
+            // Set new focus
+            currentFocused = items[newIndex];
+            currentFocused.classList.add('focused');
+            currentFocused.focus({ preventScroll: true });
+
+            // Use our fixed scroll function
+            scrollToElement(currentFocused.id);
+        }
+
+        // Initial focus
+        document.querySelector('.test-content').focus();
+    </script>
+</body>
+</html>

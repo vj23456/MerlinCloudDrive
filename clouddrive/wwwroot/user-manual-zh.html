@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudDrive Modern - 用户手册</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #059669;
+            border-bottom: 3px solid #059669;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        h2 {
+            color: #047857;
+            border-left: 4px solid #10b981;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #065f46;
+            margin-top: 30px;
+        }
+        .toc {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+            margin: 30px 0;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc ul ul {
+            padding-left: 20px;
+        }
+        .toc a {
+            color: #047857;
+            text-decoration: none;
+            padding: 5px 0;
+            display: block;
+        }
+        .toc a:hover {
+            color: #059669;
+            text-decoration: underline;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .feature-card h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        .screenshot {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .screenshot img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        .tip {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .step-number {
+            background: #0ea5e9;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #dc2626;
+        }
+        .keyboard-shortcut {
+            background: #374151;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .language-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #059669;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .language-switch:hover {
+            background: #047857;
+            color: white;
+            text-decoration: none;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="user-manual-en.html" class="language-switch">English</a>
+    
+    <div class="container">
+        <h1>CloudDrive Modern - 用户手册</h1>
+        
+        <div class="toc">
+            <h3>目录</h3>
+            <ul>
+                <li><a href="#overview">1. 概述</a></li>
+                <li><a href="#getting-started">2. 入门指南</a>
+                    <ul>
+                        <li><a href="#system-requirements">2.1 系统要求</a></li>
+                        <li><a href="#installation">2.2 安装说明</a></li>
+                        <li><a href="#first-login">2.3 首次登录</a></li>
+                    </ul>
+                </li>
+                <li><a href="#interface">3. 用户界面</a>
+                    <ul>
+                        <li><a href="#navigation">3.1 导航</a></li>
+                        <li><a href="#view-modes">3.2 查看模式</a></li>
+                        <li><a href="#sorting">3.3 排序和过滤</a></li>
+                    </ul>
+                </li>
+                <li><a href="#file-operations">4. 文件操作</a>
+                    <ul>
+                        <li><a href="#uploading">4.1 上传文件</a></li>
+                        <li><a href="#downloading">4.2 下载文件</a></li>
+                        <li><a href="#moving-copying">4.3 移动和复制</a></li>
+                        <li><a href="#renaming-deleting">4.4 重命名和删除</a></li>
+                    </ul>
+                </li>
+                <li><a href="#folder-management">5. 文件夹管理</a>
+                    <ul>
+                        <li><a href="#creating-folders">5.1 创建文件夹</a></li>
+                        <li><a href="#encrypted-folders">5.2 加密文件夹</a></li>
+                        <li><a href="#folder-navigation">5.3 文件夹导航</a></li>
+                    </ul>
+                </li>
+                <li><a href="#cloud-storage">6. 云存储集成</a>
+                    <ul>
+                        <li><a href="#adding-cloud">6.1 添加云存储</a></li>
+                        <li><a href="#managing-cloud">6.2 管理云账户</a></li>
+                    </ul>
+                </li>
+                <li><a href="#advanced-features">7. 高级功能</a>
+                    <ul>
+                        <li><a href="#media-viewer">7.1 媒体查看器</a></li>
+                        <li><a href="#external-players">7.2 外部播放器</a></li>
+                        <li><a href="#search">7.3 搜索功能</a></li>
+                        <li><a href="#sharing">7.4 文件共享</a></li>
+                        <li><a href="#offline-downloads">7.5 离线下载</a></li>
+                    </ul>
+                </li>
+                <li><a href="#keyboard-shortcuts">8. 键盘快捷键</a></li>
+                <li><a href="#troubleshooting">9. 故障排除</a></li>
+                <li><a href="#faq">10. 常见问题</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">1. 概述</h2>
+        <p>CloudDrive Modern 是一个功能强大的基于网页的文件管理应用程序，为管理多个云存储服务和本地存储中的文件提供统一的界面。采用现代网络技术构建，为组织、访问和共享文件提供响应式、直观的体验。</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🌐 多云支持</h4>
+                <p>连接和管理来自多个云存储提供商的文件，包括 Google Drive、OneDrive、Dropbox 等。</p>
+            </div>
+            <div class="feature-card">
+                <h4>📱 响应式设计</h4>
+                <p>针对桌面、平板和移动设备进行优化，具有触摸友好的控件和自适应布局。</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔒 安全功能</h4>
+                <p>加密文件夹、安全身份验证和隐私控制，确保您的数据安全。</p>
+            </div>
+            <div class="feature-card">
+                <h4>🎵 媒体播放</h4>
+                <p>内置媒体查看器，支持图像、视频、音频文件和外部播放器集成。</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔍 高级搜索</h4>
+                <p>强大的搜索功能，支持模糊匹配和内容过滤。</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ 高性能</h4>
+                <p>针对处理大型文件集合进行优化，具有智能缓存和延迟加载。</p>
+            </div>
+        </div>
+
+        <h2 id="getting-started">2. 入门指南</h2>
+
+        <h3 id="system-requirements">2.1 系统要求</h3>
+        <p>CloudDrive Modern 可在任何现代网络浏览器中运行。为获得最佳性能，我们建议：</p>
+        <ul>
+            <li><strong>浏览器：</strong> Chrome 90+、Firefox 88+、Safari 14+ 或 Edge 90+</li>
+            <li><strong>网络连接：</strong> 稳定的宽带连接用于云操作</li>
+            <li><strong>屏幕分辨率：</strong> 最低 1024x768（响应式设计适应所有尺寸）</li>
+            <li><strong>JavaScript：</strong> 必须启用</li>
+        </ul>
+
+        <h3 id="installation">2.2 安装说明</h3>
+        <p>CloudDrive Modern 是一个无需安装的网络应用程序。只需：</p>
+        <div class="step">
+            <span class="step-number">1</span>
+            打开您的网络浏览器，导航到管理员提供的 CloudDrive Modern URL。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            将页面添加到书签以便将来轻松访问。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            对于移动设备，您可以将网络应用添加到主屏幕以获得类似原生应用的体验。
+        </div>
+
+        <h3 id="first-login">2.3 首次登录</h3>
+        <div class="step">
+            <span class="step-number">1</span>
+            在登录屏幕上输入您的用户名和密码。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            点击"登录"按钮或按 <span class="keyboard-shortcut">Enter</span>。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            如果您没有账户，点击"注册"创建新账户。
+        </div>
+
+        <div class="tip">
+            <strong>💡 提示：</strong> 启用"记住我"以在浏览器会话之间保持登录状态。出于安全考虑，在公共计算机上此功能被禁用。
+        </div>
+
+        <h2 id="interface">3. 用户界面</h2>
+
+        <h3 id="navigation">3.1 导航</h3>
+        <p>CloudDrive Modern 界面由几个关键区域组成：</p>
+
+        <ul>
+            <li><strong>侧边栏：</strong> 文件夹树导航和驱动器快速访问</li>
+            <li><strong>标题栏：</strong> 视图控件、排序选项和操作按钮</li>
+            <li><strong>主内容区：</strong> 文件和文件夹显示区域</li>
+            <li><strong>属性面板：</strong> 详细文件信息（可切换）</li>
+            <li><strong>上下文菜单：</strong> 右键点击快速操作</li>
+        </ul>
+
+        <h3 id="view-modes">3.2 查看模式</h3>
+        <p>CloudDrive Modern 提供三种查看模式以适应不同的偏好：</p>
+
+        <table>
+            <tr>
+                <th>查看模式</th>
+                <th>描述</th>
+                <th>最适合</th>
+            </tr>
+            <tr>
+                <td><strong>网格视图</strong></td>
+                <td>文件显示为带缩略图的卡片</td>
+                <td>可视化浏览、图像集合</td>
+            </tr>
+            <tr>
+                <td><strong>列表视图</strong></td>
+                <td>带文件详细信息的紧凑表格</td>
+                <td>详细信息、大型文件列表</td>
+            </tr>
+            <tr>
+                <td><strong>瀑布视图</strong></td>
+                <td>Pinterest 风格的砖石布局</td>
+                <td>混合媒体、可视化探索</td>
+            </tr>
+        </table>
+
+        <div class="tip">
+            <strong>💡 提示：</strong> 使用键盘快捷键 <span class="keyboard-shortcut">V</span> 可以快速切换查看模式。
+        </div>
+
+        <h3 id="sorting">3.3 排序和过滤</h3>
+        <p>使用强大的排序和过滤选项高效组织您的文件：</p>
+
+        <h4>排序选项</h4>
+        <ul>
+            <li><strong>名称：</strong> 字母顺序（A-Z 或 Z-A）</li>
+            <li><strong>大小：</strong> 文件大小（从小到大或反之）</li>
+            <li><strong>类型：</strong> 文件扩展名/类型</li>
+            <li><strong>修改日期：</strong> 最后修改时间</li>
+        </ul>
+
+        <h4>高级过滤</h4>
+        <ul>
+            <li>按文件名或内容搜索</li>
+            <li>按文件类型过滤（图像、视频、文档等）</li>
+            <li>日期范围过滤</li>
+            <li>大小范围过滤</li>
+        </ul>
+
+        <h2 id="file-operations">4. 文件操作</h2>
+
+        <h3 id="uploading">4.1 上传文件</h3>
+        <p>CloudDrive Modern 支持多种上传方法：</p>
+
+        <h4>方法1：拖放</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            从计算机的文件资源管理器中选择文件或文件夹。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            将它们拖到 CloudDrive 窗口上。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            将它们放在所需位置（主区域或特定文件夹）。
+        </div>
+
+        <h4>方法2：上传按钮</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            点击标题栏中的"上传"按钮。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            从文件选择对话框中选择文件。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            点击"打开"开始上传。
+        </div>
+
+        <div class="tip">
+            <strong>💡 提示：</strong> 上传进度通过进度条和通知实时显示。大文件分块上传以确保可靠性。
+        </div>
+
+        <h3 id="downloading">4.2 下载文件</h3>
+        <p>单独或批量下载文件：</p>
+
+        <h4>单文件下载</h4>
+        <ul>
+            <li>右键点击文件并选择"下载"</li>
+            <li>双击非媒体文件</li>
+            <li>使用属性面板中的下载按钮</li>
+        </ul>
+
+        <h4>多文件下载</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            使用 <span class="keyboard-shortcut">Ctrl+点击</span> 或 <span class="keyboard-shortcut">Shift+点击</span> 选择多个文件。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            点击标题栏中的"下载"按钮。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            文件将被打包并作为 ZIP 压缩包下载。
+        </div>
+
+        <h3 id="moving-copying">4.3 移动和复制</h3>
+        <p>通过在文件夹间移动或复制来组织文件：</p>
+
+        <h4>拖放方法</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            选择要移动的文件。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            将它们拖到侧边栏或主区域中的目标文件夹。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            放置时按住 <span class="keyboard-shortcut">Ctrl</span> 进行复制而非移动。
+        </div>
+
+        <h4>上下文菜单方法</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            选择文件并右键点击打开上下文菜单。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            选择"移动到..."或"复制到..."。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            在文件夹选择对话框中选择目标文件夹。
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 警告：</strong> 在不同云存储提供商之间移动文件可能需要更长时间，因为需要传输数据。操作将在后台执行。
+        </div>
+
+        <h3 id="renaming-deleting">4.4 重命名和删除</h3>
+
+        <h4>重命名文件和文件夹</h4>
+        <ul>
+            <li>右键点击并选择"重命名"</li>
+            <li>选择文件时按 <span class="keyboard-shortcut">F2</span></li>
+            <li>点击属性面板中的编辑按钮</li>
+        </ul>
+
+        <h4>删除文件和文件夹</h4>
+        <ul>
+            <li>选择项目并按 <span class="keyboard-shortcut">Delete</span></li>
+            <li>右键点击并选择"删除"</li>
+            <li>使用标题栏中的删除按钮</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ 警告：</strong> 删除的文件可能无法恢复，具体取决于云存储提供商的政策。删除重要文件前请务必确认。
+        </div>
+
+        <h2 id="folder-management">5. 文件夹管理</h2>
+
+        <h3 id="creating-folders">5.1 创建文件夹</h3>
+        <div class="step">
+            <span class="step-number">1</span>
+            点击标题栏中的"+"按钮或在空白区域右键点击。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            从菜单中选择"新建文件夹"。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            输入文件夹名称并按 <span class="keyboard-shortcut">Enter</span> 或点击"创建"。
+        </div>
+
+        <h3 id="encrypted-folders">5.2 加密文件夹</h3>
+        <p>为敏感数据创建加密文件夹：</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            点击"+"按钮并选择"新建加密文件夹"。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            输入文件夹名称和强密码。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            确认密码并点击"创建"。
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 重要：</strong> 加密文件夹密码无法恢复。请确保记住密码或安全存储。
+        </div>
+
+        <h3 id="folder-navigation">5.3 文件夹导航</h3>
+        <p>高效导航文件夹结构：</p>
+
+        <ul>
+            <li><strong>侧边栏树：</strong> 点击树视图中的文件夹进行快速导航</li>
+            <li><strong>面包屑导航：</strong> 点击路径的任何部分跳转到该级别</li>
+            <li><strong>前进/后退：</strong> 使用浏览器前进/后退按钮或键盘快捷键</li>
+            <li><strong>向上按钮：</strong> 点击转到父文件夹</li>
+        </ul>
+
+        <h2 id="cloud-storage">6. 云存储集成</h2>
+
+        <h3 id="adding-cloud">6.1 添加云存储</h3>
+        <p>连接您的云存储账户在一个地方管理所有文件：</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            点击"+"按钮并选择"添加云存储"。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            选择您的云存储提供商（Google Drive、OneDrive 等）。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            按照身份验证流程授予访问权限。
+        </div>
+        <div class="step">
+            <span class="step-number">4</span>
+            您的云存储将出现在侧边栏中。
+        </div>
+
+        <h3 id="managing-cloud">6.2 管理云账户</h3>
+        <ul>
+            <li><strong>刷新：</strong> 右键点击云存储并选择"刷新"进行同步</li>
+            <li><strong>断开连接：</strong> 移除对云存储账户的访问</li>
+            <li><strong>配额：</strong> 查看存储使用情况和可用空间</li>
+            <li><strong>设置：</strong> 配置同步选项和首选项</li>
+        </ul>
+
+        <h2 id="advanced-features">7. 高级功能</h2>
+
+        <h3 id="media-viewer">7.1 媒体查看器</h3>
+        <p>CloudDrive Modern 包含强大的内置媒体查看器：</p>
+
+        <h4>支持的格式</h4>
+        <ul>
+            <li><strong>图像：</strong> JPEG、PNG、GIF、WebP、SVG、BMP</li>
+            <li><strong>视频：</strong> MP4、WebM、AVI、MOV（取决于浏览器）</li>
+            <li><strong>音频：</strong> MP3、WAV、OGG、AAC</li>
+            <li><strong>文档：</strong> PDF 预览</li>
+        </ul>
+
+        <h4>媒体查看器控件</h4>
+        <ul>
+            <li><strong>导航：</strong> 箭头键或屏幕按钮</li>
+            <li><strong>缩放：</strong> 鼠标滚轮或捏合手势</li>
+            <li><strong>全屏：</strong> 按 <span class="keyboard-shortcut">F</span> 或点击全屏按钮</li>
+            <li><strong>幻灯片：</strong> 自动播放媒体文件</li>
+        </ul>
+
+        <h3 id="external-players">7.2 外部播放器</h3>
+        <p>使用外部应用程序启动文件以增强播放：</p>
+
+        <ul>
+            <li><strong>VLC Media Player：</strong> 用于高级视频播放</li>
+            <li><strong>PotPlayer：</strong> Windows 媒体播放器集成</li>
+            <li><strong>IINA：</strong> macOS 媒体播放器</li>
+            <li><strong>Infuse：</strong> iOS/tvOS 媒体播放器</li>
+            <li><strong>nPlayer：</strong> 跨平台播放器</li>
+        </ul>
+
+        <div class="tip">
+            <strong>💡 提示：</strong> 外部播放器需要安装在您的设备上并配置为处理 CloudDrive URL。
+        </div>
+
+        <h3 id="search">7.3 搜索功能</h3>
+        <p>使用强大的搜索功能快速查找文件：</p>
+
+        <h4>基本搜索</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            点击搜索图标或按 <span class="keyboard-shortcut">Ctrl+F</span>。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            输入搜索查询。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            按 <span class="keyboard-shortcut">Enter</span> 进行搜索。
+        </div>
+
+        <h4>高级搜索选项</h4>
+        <ul>
+            <li><strong>模糊匹配：</strong> 查找具有相似名称的文件</li>
+            <li><strong>内容搜索：</strong> 在文件内容中搜索（在支持的情况下）</li>
+            <li><strong>文件类型过滤：</strong> 将搜索限制为特定文件类型</li>
+            <li><strong>日期范围：</strong> 查找在特定时间段内修改的文件</li>
+        </ul>
+
+        <h3 id="sharing">7.4 文件共享</h3>
+        <p>与他人共享文件和文件夹：</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            右键点击文件或文件夹并选择"共享"。
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            配置共享权限和过期时间。
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            复制生成的共享链接。
+        </div>
+        <div class="step">
+            <span class="step-number">4</span>
+            将链接发送给接收者。
+        </div>
+
+        <h3 id="offline-downloads">7.5 离线下载</h3>
+        <p>排队下载以进行离线访问：</p>
+
+        <ul>
+            <li>将文件添加到离线下载队列</li>
+            <li>下载在后台继续</li>
+            <li>在没有网络时访问文件</li>
+            <li>管理下载优先级和带宽</li>
+        </ul>
+
+        <h2 id="keyboard-shortcuts">8. 键盘快捷键</h2>
+
+        <table>
+            <tr>
+                <th>操作</th>
+                <th>快捷键</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>搜索</td>
+                <td><span class="keyboard-shortcut">Ctrl+F</span></td>
+                <td>打开搜索对话框</td>
+            </tr>
+            <tr>
+                <td>全选</td>
+                <td><span class="keyboard-shortcut">Ctrl+A</span></td>
+                <td>选择当前文件夹中的所有文件</td>
+            </tr>
+            <tr>
+                <td>复制</td>
+                <td><span class="keyboard-shortcut">Ctrl+C</span></td>
+                <td>复制选定文件</td>
+            </tr>
+            <tr>
+                <td>剪切</td>
+                <td><span class="keyboard-shortcut">Ctrl+X</span></td>
+                <td>剪切选定文件</td>
+            </tr>
+            <tr>
+                <td>粘贴</td>
+                <td><span class="keyboard-shortcut">Ctrl+V</span></td>
+                <td>粘贴文件</td>
+            </tr>
+            <tr>
+                <td>删除</td>
+                <td><span class="keyboard-shortcut">Delete</span></td>
+                <td>删除选定文件</td>
+            </tr>
+            <tr>
+                <td>重命名</td>
+                <td><span class="keyboard-shortcut">F2</span></td>
+                <td>重命名选定文件</td>
+            </tr>
+            <tr>
+                <td>刷新</td>
+                <td><span class="keyboard-shortcut">F5</span></td>
+                <td>刷新当前文件夹</td>
+            </tr>
+            <tr>
+                <td>更改视图</td>
+                <td><span class="keyboard-shortcut">V</span></td>
+                <td>循环切换视图模式</td>
+            </tr>
+            <tr>
+                <td>后退</td>
+                <td><span class="keyboard-shortcut">Alt+←</span></td>
+                <td>导航到上一个文件夹</td>
+            </tr>
+            <tr>
+                <td>前进</td>
+                <td><span class="keyboard-shortcut">Alt+→</span></td>
+                <td>导航到下一个文件夹</td>
+            </tr>
+            <tr>
+                <td>向上</td>
+                <td><span class="keyboard-shortcut">Alt+↑</span></td>
+                <td>导航到父文件夹</td>
+            </tr>
+        </table>
+
+        <h2 id="troubleshooting">9. 故障排除</h2>
+
+        <h3>常见问题及解决方案</h3>
+
+        <h4>上传失败</h4>
+        <ul>
+            <li><strong>大文件：</strong> 检查云存储的文件大小限制</li>
+            <li><strong>网络问题：</strong> 验证网络连接稳定性</li>
+            <li><strong>存储已满：</strong> 检查可用存储空间</li>
+            <li><strong>文件类型：</strong> 某些云提供商限制特定文件类型</li>
+        </ul>
+
+        <h4>登录问题</h4>
+        <ul>
+            <li><strong>错误凭据：</strong> 验证用户名和密码</li>
+            <li><strong>账户锁定：</strong> 联系您的管理员</li>
+            <li><strong>浏览器问题：</strong> 清除缓存和 Cookie</li>
+            <li><strong>网络：</strong> 检查防火墙和代理设置</li>
+        </ul>
+
+        <h4>性能问题</h4>
+        <ul>
+            <li><strong>加载缓慢：</strong> 尝试减少每页显示的文件数量</li>
+            <li><strong>内存使用：</strong> 关闭未使用的浏览器标签</li>
+            <li><strong>网络速度：</strong> 检查您的网络连接</li>
+            <li><strong>浏览器缓存：</strong> 清除浏览器缓存并刷新</li>
+        </ul>
+
+        <h4>云存储问题</h4>
+        <ul>
+            <li><strong>身份验证过期：</strong> 重新认证您的云账户</li>
+            <li><strong>同步冲突：</strong> 手动解决文件冲突</li>
+            <li><strong>API 限制：</strong> 等待速率限制重置</li>
+            <li><strong>服务中断：</strong> 检查云提供商状态页面</li>
+        </ul>
+
+        <h2 id="faq">10. 常见问题</h2>
+
+        <h3>问：我在 CloudDrive Modern 中的数据安全吗？</h3>
+        <p>答：是的，CloudDrive Modern 使用行业标准的安全实践，包括 HTTPS 加密、安全身份验证和可选文件加密。您的云存储凭据经过加密并安全存储。</p>
+
+        <h3>问：我可以离线访问 CloudDrive Modern 吗？</h3>
+        <p>答：CloudDrive Modern 的大部分功能需要网络连接。但是，您可以使用离线下载功能将文件缓存到本地以进行离线访问。</p>
+
+        <h3>问：我有多少存储空间？</h3>
+        <p>答：存储空间取决于您的云存储账户和本地服务器配置。在侧边栏或属性面板中查看存储信息。</p>
+
+        <h3>问：我可以与没有账户的人共享文件吗？</h3>
+        <p>答：是的，您可以创建共享链接，允许外部用户访问特定文件或文件夹，而无需账户。</p>
+
+        <h3>问：如果我删除文件会发生什么？</h3>
+        <p>答：删除的文件将从 CloudDrive Modern 中移除，并可能根据提供商的政策移动到云存储提供商的回收站中。</p>
+
+        <h3>问：我可以上传文件夹吗？</h3>
+        <p>答：是的，您可以拖放整个文件夹，CloudDrive Modern 将在上传过程中保留文件夹结构。</p>
+
+        <h3>问：有移动应用吗？</h3>
+        <p>答：CloudDrive Modern 是一个在移动设备上运行的响应式网络应用程序。您可以将其添加到设备的主屏幕以获得类似原生应用的体验。</p>
+
+        <h3>问：如何报告错误或请求功能？</h3>
+        <p>答：联系您的系统管理员或使用应用程序设置菜单中的反馈选项。</p>
+
+        <div class="tip">
+            <strong>💡 需要更多帮助？</strong> 联系您的系统管理员或 IT 支持团队以获得 CloudDrive Modern 的额外帮助。
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+        
+        <p style="text-align: center; color: #6b7280; font-size: 0.9em;">
+            CloudDrive Modern 用户手册 - 版本 2.0<br>
+            © 2025 CloudDrive 项目。保留所有权利。
+        </p>
+    </div>
+</body>
+</html>

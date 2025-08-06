@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudDrive Modern - User Manual</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #059669;
+            border-bottom: 3px solid #059669;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        h2 {
+            color: #047857;
+            border-left: 4px solid #10b981;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #065f46;
+            margin-top: 30px;
+        }
+        .toc {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+            margin: 30px 0;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc ul ul {
+            padding-left: 20px;
+        }
+        .toc a {
+            color: #047857;
+            text-decoration: none;
+            padding: 5px 0;
+            display: block;
+        }
+        .toc a:hover {
+            color: #059669;
+            text-decoration: underline;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .feature-card h4 {
+            color: #059669;
+            margin-top: 0;
+        }
+        .screenshot {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .screenshot img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        .tip {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .step-number {
+            background: #0ea5e9;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #dc2626;
+        }
+        .keyboard-shortcut {
+            background: #374151;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .language-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #059669;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .language-switch:hover {
+            background: #047857;
+            color: white;
+            text-decoration: none;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="user-manual-zh.html" class="language-switch">中文版</a>
+    
+    <div class="container">
+        <h1>CloudDrive Modern - User Manual</h1>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">1. Overview</a></li>
+                <li><a href="#getting-started">2. Getting Started</a>
+                    <ul>
+                        <li><a href="#system-requirements">2.1 System Requirements</a></li>
+                        <li><a href="#installation">2.2 Installation</a></li>
+                        <li><a href="#first-login">2.3 First Login</a></li>
+                    </ul>
+                </li>
+                <li><a href="#interface">3. User Interface</a>
+                    <ul>
+                        <li><a href="#navigation">3.1 Navigation</a></li>
+                        <li><a href="#view-modes">3.2 View Modes</a></li>
+                        <li><a href="#sorting">3.3 Sorting and Filtering</a></li>
+                    </ul>
+                </li>
+                <li><a href="#file-operations">4. File Operations</a>
+                    <ul>
+                        <li><a href="#uploading">4.1 Uploading Files</a></li>
+                        <li><a href="#downloading">4.2 Downloading Files</a></li>
+                        <li><a href="#moving-copying">4.3 Moving and Copying</a></li>
+                        <li><a href="#renaming-deleting">4.4 Renaming and Deleting</a></li>
+                    </ul>
+                </li>
+                <li><a href="#folder-management">5. Folder Management</a>
+                    <ul>
+                        <li><a href="#creating-folders">5.1 Creating Folders</a></li>
+                        <li><a href="#encrypted-folders">5.2 Encrypted Folders</a></li>
+                        <li><a href="#folder-navigation">5.3 Folder Navigation</a></li>
+                    </ul>
+                </li>
+                <li><a href="#cloud-storage">6. Cloud Storage Integration</a>
+                    <ul>
+                        <li><a href="#adding-cloud">6.1 Adding Cloud Storage</a></li>
+                        <li><a href="#managing-cloud">6.2 Managing Cloud Accounts</a></li>
+                    </ul>
+                </li>
+                <li><a href="#advanced-features">7. Advanced Features</a>
+                    <ul>
+                        <li><a href="#media-viewer">7.1 Media Viewer</a></li>
+                        <li><a href="#external-players">7.2 External Players</a></li>
+                        <li><a href="#search">7.3 Search Functionality</a></li>
+                        <li><a href="#sharing">7.4 File Sharing</a></li>
+                        <li><a href="#offline-downloads">7.5 Offline Downloads</a></li>
+                    </ul>
+                </li>
+                <li><a href="#keyboard-shortcuts">8. Keyboard Shortcuts</a></li>
+                <li><a href="#troubleshooting">9. Troubleshooting</a></li>
+                <li><a href="#faq">10. Frequently Asked Questions</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">1. Overview</h2>
+        <p>CloudDrive Modern is a powerful web-based file management application that provides a unified interface for managing files across multiple cloud storage services and local storage. Built with modern web technologies, it offers a responsive, intuitive experience for organizing, accessing, and sharing your files.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🌐 Multi-Cloud Support</h4>
+                <p>Connect and manage files from multiple cloud storage providers including Google Drive, OneDrive, Dropbox, and more.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📱 Responsive Design</h4>
+                <p>Optimized for desktop, tablet, and mobile devices with touch-friendly controls and adaptive layouts.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔒 Security Features</h4>
+                <p>Encrypted folders, secure authentication, and privacy controls to keep your data safe.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🎵 Media Playback</h4>
+                <p>Built-in media viewer with support for images, videos, audio files, and external player integration.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔍 Advanced Search</h4>
+                <p>Powerful search functionality with fuzzy matching and content filtering.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ High Performance</h4>
+                <p>Optimized for handling large file collections with intelligent caching and lazy loading.</p>
+            </div>
+        </div>
+
+        <h2 id="getting-started">2. Getting Started</h2>
+
+        <h3 id="system-requirements">2.1 System Requirements</h3>
+        <p>CloudDrive Modern runs in any modern web browser. For optimal performance, we recommend:</p>
+        <ul>
+            <li><strong>Browser:</strong> Chrome 90+, Firefox 88+, Safari 14+, or Edge 90+</li>
+            <li><strong>Internet Connection:</strong> Stable broadband connection for cloud operations</li>
+            <li><strong>Screen Resolution:</strong> 1024x768 minimum (responsive design adapts to all sizes)</li>
+            <li><strong>JavaScript:</strong> Must be enabled</li>
+        </ul>
+
+        <h3 id="installation">2.2 Installation</h3>
+        <p>CloudDrive Modern is a web application that requires no installation. Simply:</p>
+        <div class="step">
+            <span class="step-number">1</span>
+            Open your web browser and navigate to the CloudDrive Modern URL provided by your administrator.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Bookmark the page for easy access in the future.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            For mobile devices, you can add the web app to your home screen for a native app-like experience.
+        </div>
+
+        <h3 id="first-login">2.3 First Login</h3>
+        <div class="step">
+            <span class="step-number">1</span>
+            Enter your username and password on the login screen.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Click the "Login" button or press <span class="keyboard-shortcut">Enter</span>.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            If you don't have an account, click "Register" to create a new account.
+        </div>
+
+        <div class="tip">
+            <strong>💡 Tip:</strong> Enable "Remember me" to stay logged in across browser sessions. For security, this is disabled on public computers.
+        </div>
+
+        <h2 id="interface">3. User Interface</h2>
+
+        <h3 id="navigation">3.1 Navigation</h3>
+        <p>The CloudDrive Modern interface consists of several key areas:</p>
+
+        <ul>
+            <li><strong>Sidebar:</strong> Folder tree navigation and quick access to drives</li>
+            <li><strong>Header Bar:</strong> View controls, sorting options, and action buttons</li>
+            <li><strong>Main Content:</strong> File and folder display area</li>
+            <li><strong>Properties Panel:</strong> Detailed file information (can be toggled)</li>
+            <li><strong>Context Menus:</strong> Right-click for quick actions</li>
+        </ul>
+
+        <h3 id="view-modes">3.2 View Modes</h3>
+        <p>CloudDrive Modern offers three view modes to suit different preferences:</p>
+
+        <table>
+            <tr>
+                <th>View Mode</th>
+                <th>Description</th>
+                <th>Best For</th>
+            </tr>
+            <tr>
+                <td><strong>Grid View</strong></td>
+                <td>Files displayed as cards with thumbnails</td>
+                <td>Visual browsing, image collections</td>
+            </tr>
+            <tr>
+                <td><strong>List View</strong></td>
+                <td>Compact table with file details</td>
+                <td>Detailed information, large file lists</td>
+            </tr>
+            <tr>
+                <td><strong>Waterfall View</strong></td>
+                <td>Pinterest-style masonry layout</td>
+                <td>Mixed media, visual exploration</td>
+            </tr>
+        </table>
+
+        <div class="tip">
+            <strong>💡 Tip:</strong> Use the keyboard shortcut <span class="keyboard-shortcut">V</span> to quickly cycle through view modes.
+        </div>
+
+        <h3 id="sorting">3.3 Sorting and Filtering</h3>
+        <p>Organize your files efficiently with powerful sorting and filtering options:</p>
+
+        <h4>Sorting Options</h4>
+        <ul>
+            <li><strong>Name:</strong> Alphabetical order (A-Z or Z-A)</li>
+            <li><strong>Size:</strong> File size (smallest to largest or vice versa)</li>
+            <li><strong>Type:</strong> File extension/type</li>
+            <li><strong>Modified Date:</strong> Last modification time</li>
+        </ul>
+
+        <h4>Advanced Filtering</h4>
+        <ul>
+            <li>Search by filename or content</li>
+            <li>Filter by file type (images, videos, documents, etc.)</li>
+            <li>Date range filtering</li>
+            <li>Size range filtering</li>
+        </ul>
+
+        <h2 id="file-operations">4. File Operations</h2>
+
+        <h3 id="uploading">4.1 Uploading Files</h3>
+        <p>CloudDrive Modern supports multiple upload methods:</p>
+
+        <h4>Method 1: Drag and Drop</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Select files or folders from your computer's file explorer.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Drag them over the CloudDrive window.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Drop them in the desired location (main area or specific folder).
+        </div>
+
+        <h4>Method 2: Upload Button</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Click the "Upload" button in the header bar.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Select files from the file picker dialog.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Click "Open" to start the upload.
+        </div>
+
+        <div class="tip">
+            <strong>💡 Tip:</strong> Upload progress is shown in real-time with progress bars and notifications. Large files are uploaded in chunks for reliability.
+        </div>
+
+        <h3 id="downloading">4.2 Downloading Files</h3>
+        <p>Download files individually or in bulk:</p>
+
+        <h4>Single File Download</h4>
+        <ul>
+            <li>Right-click on a file and select "Download"</li>
+            <li>Double-click on non-media files</li>
+            <li>Use the download button in the properties panel</li>
+        </ul>
+
+        <h4>Multiple File Download</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Select multiple files using <span class="keyboard-shortcut">Ctrl+Click</span> or <span class="keyboard-shortcut">Shift+Click</span>.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Click the "Download" button in the header bar.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Files will be packaged and downloaded as a ZIP archive.
+        </div>
+
+        <h3 id="moving-copying">4.3 Moving and Copying</h3>
+        <p>Organize your files by moving or copying them between folders:</p>
+
+        <h4>Drag and Drop Method</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Select the files you want to move.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Drag them to the destination folder in the sidebar or main area.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Hold <span class="keyboard-shortcut">Ctrl</span> while dropping to copy instead of move.
+        </div>
+
+        <h4>Context Menu Method</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Select files and right-click to open the context menu.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Choose "Move to..." or "Copy to...".
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Select the destination folder in the folder picker dialog.
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> Moving files between different cloud storage providers may take longer as data needs to be transferred. The operation will be performed in the background.
+        </div>
+
+        <h3 id="renaming-deleting">4.4 Renaming and Deleting</h3>
+
+        <h4>Renaming Files and Folders</h4>
+        <ul>
+            <li>Right-click and select "Rename"</li>
+            <li>Press <span class="keyboard-shortcut">F2</span> when a file is selected</li>
+            <li>Click the edit button in the properties panel</li>
+        </ul>
+
+        <h4>Deleting Files and Folders</h4>
+        <ul>
+            <li>Select items and press <span class="keyboard-shortcut">Delete</span></li>
+            <li>Right-click and select "Delete"</li>
+            <li>Use the delete button in the header bar</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> Deleted files may not be recoverable depending on your cloud storage provider's policies. Always confirm before deleting important files.
+        </div>
+
+        <h2 id="folder-management">5. Folder Management</h2>
+
+        <h3 id="creating-folders">5.1 Creating Folders</h3>
+        <div class="step">
+            <span class="step-number">1</span>
+            Click the "+" button in the header bar or right-click in an empty area.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Select "New Folder" from the menu.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Enter the folder name and press <span class="keyboard-shortcut">Enter</span> or click "Create".
+        </div>
+
+        <h3 id="encrypted-folders">5.2 Encrypted Folders</h3>
+        <p>Create encrypted folders for sensitive data:</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            Click the "+" button and select "New Encrypted Folder".
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Enter a folder name and a strong password.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Confirm the password and click "Create".
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> Encrypted folder passwords cannot be recovered. Make sure to remember your password or store it securely.
+        </div>
+
+        <h3 id="folder-navigation">5.3 Folder Navigation</h3>
+        <p>Navigate efficiently through your folder structure:</p>
+
+        <ul>
+            <li><strong>Sidebar Tree:</strong> Click folders in the tree view for quick navigation</li>
+            <li><strong>Breadcrumb Navigation:</strong> Click any part of the path to jump to that level</li>
+            <li><strong>Back/Forward:</strong> Use browser back/forward buttons or keyboard shortcuts</li>
+            <li><strong>Up Button:</strong> Click to go to the parent folder</li>
+        </ul>
+
+        <h2 id="cloud-storage">6. Cloud Storage Integration</h2>
+
+        <h3 id="adding-cloud">6.1 Adding Cloud Storage</h3>
+        <p>Connect your cloud storage accounts to manage all your files in one place:</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            Click the "+" button and select "Add Cloud Storage".
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Choose your cloud storage provider (Google Drive, OneDrive, etc.).
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Follow the authentication process to grant access.
+        </div>
+        <div class="step">
+            <span class="step-number">4</span>
+            Your cloud storage will appear in the sidebar.
+        </div>
+
+        <h3 id="managing-cloud">6.2 Managing Cloud Accounts</h3>
+        <ul>
+            <li><strong>Refresh:</strong> Right-click on a cloud storage and select "Refresh" to sync</li>
+            <li><strong>Disconnect:</strong> Remove access to a cloud storage account</li>
+            <li><strong>Quota:</strong> View storage usage and available space</li>
+            <li><strong>Settings:</strong> Configure sync options and preferences</li>
+        </ul>
+
+        <h2 id="advanced-features">7. Advanced Features</h2>
+
+        <h3 id="media-viewer">7.1 Media Viewer</h3>
+        <p>CloudDrive Modern includes a powerful built-in media viewer:</p>
+
+        <h4>Supported Formats</h4>
+        <ul>
+            <li><strong>Images:</strong> JPEG, PNG, GIF, WebP, SVG, BMP</li>
+            <li><strong>Videos:</strong> MP4, WebM, AVI, MOV (browser-dependent)</li>
+            <li><strong>Audio:</strong> MP3, WAV, OGG, AAC</li>
+            <li><strong>Documents:</strong> PDF preview</li>
+        </ul>
+
+        <h4>Media Viewer Controls</h4>
+        <ul>
+            <li><strong>Navigation:</strong> Arrow keys or on-screen buttons</li>
+            <li><strong>Zoom:</strong> Mouse wheel or pinch gestures</li>
+            <li><strong>Fullscreen:</strong> Press <span class="keyboard-shortcut">F</span> or click fullscreen button</li>
+            <li><strong>Slideshow:</strong> Automatic progression through media files</li>
+        </ul>
+
+        <h3 id="external-players">7.2 External Players</h3>
+        <p>Launch files with external applications for enhanced playback:</p>
+
+        <ul>
+            <li><strong>VLC Media Player:</strong> For advanced video playback</li>
+            <li><strong>PotPlayer:</strong> Windows media player integration</li>
+            <li><strong>IINA:</strong> macOS media player</li>
+            <li><strong>Infuse:</strong> iOS/tvOS media player</li>
+            <li><strong>nPlayer:</strong> Cross-platform player</li>
+        </ul>
+
+        <div class="tip">
+            <strong>💡 Tip:</strong> External players need to be installed on your device and configured to handle CloudDrive URLs.
+        </div>
+
+        <h3 id="search">7.3 Search Functionality</h3>
+        <p>Find files quickly with powerful search features:</p>
+
+        <h4>Basic Search</h4>
+        <div class="step">
+            <span class="step-number">1</span>
+            Click the search icon or press <span class="keyboard-shortcut">Ctrl+F</span>.
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Enter your search query.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Press <span class="keyboard-shortcut">Enter</span> to search.
+        </div>
+
+        <h4>Advanced Search Options</h4>
+        <ul>
+            <li><strong>Fuzzy Matching:</strong> Find files with similar names</li>
+            <li><strong>Content Search:</strong> Search within file contents (where supported)</li>
+            <li><strong>File Type Filters:</strong> Limit search to specific file types</li>
+            <li><strong>Date Range:</strong> Find files modified within a specific time period</li>
+        </ul>
+
+        <h3 id="sharing">7.4 File Sharing</h3>
+        <p>Share files and folders with others:</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            Right-click on a file or folder and select "Share".
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            Configure sharing permissions and expiration.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            Copy the generated share link.
+        </div>
+        <div class="step">
+            <span class="step-number">4</span>
+            Send the link to recipients.
+        </div>
+
+        <h3 id="offline-downloads">7.5 Offline Downloads</h3>
+        <p>Queue downloads for offline access:</p>
+
+        <ul>
+            <li>Add files to the offline download queue</li>
+            <li>Downloads continue in the background</li>
+            <li>Access files when internet is unavailable</li>
+            <li>Manage download priorities and bandwidth</li>
+        </ul>
+
+        <h2 id="keyboard-shortcuts">8. Keyboard Shortcuts</h2>
+
+        <table>
+            <tr>
+                <th>Action</th>
+                <th>Shortcut</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>Search</td>
+                <td><span class="keyboard-shortcut">Ctrl+F</span></td>
+                <td>Open search dialog</td>
+            </tr>
+            <tr>
+                <td>Select All</td>
+                <td><span class="keyboard-shortcut">Ctrl+A</span></td>
+                <td>Select all files in current folder</td>
+            </tr>
+            <tr>
+                <td>Copy</td>
+                <td><span class="keyboard-shortcut">Ctrl+C</span></td>
+                <td>Copy selected files</td>
+            </tr>
+            <tr>
+                <td>Cut</td>
+                <td><span class="keyboard-shortcut">Ctrl+X</span></td>
+                <td>Cut selected files</td>
+            </tr>
+            <tr>
+                <td>Paste</td>
+                <td><span class="keyboard-shortcut">Ctrl+V</span></td>
+                <td>Paste files</td>
+            </tr>
+            <tr>
+                <td>Delete</td>
+                <td><span class="keyboard-shortcut">Delete</span></td>
+                <td>Delete selected files</td>
+            </tr>
+            <tr>
+                <td>Rename</td>
+                <td><span class="keyboard-shortcut">F2</span></td>
+                <td>Rename selected file</td>
+            </tr>
+            <tr>
+                <td>Refresh</td>
+                <td><span class="keyboard-shortcut">F5</span></td>
+                <td>Refresh current folder</td>
+            </tr>
+            <tr>
+                <td>Change View</td>
+                <td><span class="keyboard-shortcut">V</span></td>
+                <td>Cycle through view modes</td>
+            </tr>
+            <tr>
+                <td>Go Back</td>
+                <td><span class="keyboard-shortcut">Alt+←</span></td>
+                <td>Navigate to previous folder</td>
+            </tr>
+            <tr>
+                <td>Go Forward</td>
+                <td><span class="keyboard-shortcut">Alt+→</span></td>
+                <td>Navigate to next folder</td>
+            </tr>
+            <tr>
+                <td>Go Up</td>
+                <td><span class="keyboard-shortcut">Alt+↑</span></td>
+                <td>Navigate to parent folder</td>
+            </tr>
+        </table>
+
+        <h2 id="troubleshooting">9. Troubleshooting</h2>
+
+        <h3>Common Issues and Solutions</h3>
+
+        <h4>Upload Failures</h4>
+        <ul>
+            <li><strong>Large Files:</strong> Check file size limits for your cloud storage</li>
+            <li><strong>Network Issues:</strong> Verify internet connection stability</li>
+            <li><strong>Storage Full:</strong> Check available storage space</li>
+            <li><strong>File Type:</strong> Some cloud providers restrict certain file types</li>
+        </ul>
+
+        <h4>Login Problems</h4>
+        <ul>
+            <li><strong>Wrong Credentials:</strong> Verify username and password</li>
+            <li><strong>Account Locked:</strong> Contact your administrator</li>
+            <li><strong>Browser Issues:</strong> Clear cache and cookies</li>
+            <li><strong>Network:</strong> Check firewall and proxy settings</li>
+        </ul>
+
+        <h4>Performance Issues</h4>
+        <ul>
+            <li><strong>Slow Loading:</strong> Try reducing the number of files displayed per page</li>
+            <li><strong>Memory Usage:</strong> Close unused browser tabs</li>
+            <li><strong>Network Speed:</strong> Check your internet connection</li>
+            <li><strong>Browser Cache:</strong> Clear browser cache and refresh</li>
+        </ul>
+
+        <h4>Cloud Storage Issues</h4>
+        <ul>
+            <li><strong>Authentication Expired:</strong> Re-authenticate your cloud accounts</li>
+            <li><strong>Sync Conflicts:</strong> Resolve file conflicts manually</li>
+            <li><strong>API Limits:</strong> Wait for rate limits to reset</li>
+            <li><strong>Service Outages:</strong> Check cloud provider status pages</li>
+        </ul>
+
+        <h2 id="faq">10. Frequently Asked Questions</h2>
+
+        <h3>Q: Is my data secure in CloudDrive Modern?</h3>
+        <p>A: Yes, CloudDrive Modern uses industry-standard security practices including HTTPS encryption, secure authentication, and optional file encryption. Your cloud storage credentials are encrypted and stored securely.</p>
+
+        <h3>Q: Can I access CloudDrive Modern offline?</h3>
+        <p>A: CloudDrive Modern requires an internet connection for most features. However, you can use the offline download feature to cache files locally for offline access.</p>
+
+        <h3>Q: How much storage space do I have?</h3>
+        <p>A: Storage space depends on your cloud storage accounts and local server configuration. Check the storage information in the sidebar or properties panel.</p>
+
+        <h3>Q: Can I share files with people who don't have accounts?</h3>
+        <p>A: Yes, you can create share links that allow external users to access specific files or folders without requiring an account.</p>
+
+        <h3>Q: What happens if I delete a file?</h3>
+        <p>A: Deleted files are removed from CloudDrive Modern and may be moved to your cloud storage provider's trash/recycle bin, depending on the provider's policies.</p>
+
+        <h3>Q: Can I upload folders?</h3>
+        <p>A: Yes, you can drag and drop entire folders, and CloudDrive Modern will preserve the folder structure during upload.</p>
+
+        <h3>Q: Is there a mobile app?</h3>
+        <p>A: CloudDrive Modern is a responsive web application that works on mobile devices. You can add it to your device's home screen for a native app-like experience.</p>
+
+        <h3>Q: How do I report bugs or request features?</h3>
+        <p>A: Contact your system administrator or use the feedback option in the application settings menu.</p>
+
+        <div class="tip">
+            <strong>💡 Need More Help?</strong> Contact your system administrator or IT support team for additional assistance with CloudDrive Modern.
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+        
+        <p style="text-align: center; color: #6b7280; font-size: 0.9em;">
+            CloudDrive Modern User Manual - Version 2.0<br>
+            © 2025 CloudDrive Project. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>

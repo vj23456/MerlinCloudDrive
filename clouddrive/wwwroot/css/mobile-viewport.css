@@ -1,0 +1,109 @@
+/* Mobile Viewport and Browser UI Handling */
+
+:root {
+    /* Mobile viewport handling - set by JavaScript */
+    --vh: 1vh; /* Actual viewport height unit */
+    --mobile-browser-ui-height: 0px; /* Height of mobile browser UI */
+}
+
+/* Enhanced mobile viewport support */
+@supports (height: 100dvh) {
+    .app-container {
+        /* Use dynamic viewport height when available */
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+    }
+}
+
+/* Fallback for browsers without dvh support - use JavaScript-calculated values */
+@media (max-width: 768px) {
+    .app-container {
+        /* Use custom property set by JavaScript for mobile browser UI handling */
+        height: calc(var(--vh, 1vh) * 100) !important;
+        max-height: calc(var(--vh, 1vh) * 100) !important;
+    }
+    
+    /* Ensure sidebar content is properly sized on mobile */
+    .app-sidebar {
+        /* Account for mobile browser UI */
+        height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
+        max-height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
+    }
+    
+    /* Add safe padding to scrollable areas to prevent content hiding */
+    .sidebar-nav,
+    .nav-menu,
+    .app-content,
+    .content-body {
+        padding-bottom: max(20px, var(--mobile-browser-ui-height, 20px), env(safe-area-inset-bottom, 20px)) !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ensure dropdown menus don't get cut off by mobile browser UI */
+    .dropdown-menu {
+        max-height: calc(var(--vh, 1vh) * 80) !important;
+        overflow-y: auto !important;
+        margin-bottom: max(20px, var(--mobile-browser-ui-height, 20px)) !important;
+    }
+    
+    /* User menu specific mobile adjustments */
+    .user-menu .dropdown-menu {
+        max-height: calc(var(--vh, 1vh) * 70) !important;
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
+    }
+    
+    /* Ensure main content area accounts for mobile browser UI */
+    .app-main {
+        min-height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
+        max-height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
+    }
+}
+
+/* iOS specific fixes for Safari mobile browser UI */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        .app-container {
+            /* iOS Safari specific viewport handling */
+            height: -webkit-fill-available !important;
+            max-height: -webkit-fill-available !important;
+        }
+        
+        .app-sidebar {
+            height: calc(-webkit-fill-available - var(--header-height, 48px)) !important;
+        }
+        
+        .app-main {
+            min-height: calc(-webkit-fill-available - var(--header-height, 48px)) !important;
+            max-height: calc(-webkit-fill-available - var(--header-height, 48px)) !important;
+        }
+    }
+}
+
+/* Prevent zoom and bouncing on mobile for better UI stability */
+@media (max-width: 768px) {
+    html, body {
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        /* Prevent overscroll bounce */
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Allow text selection in specific areas */
+    .content-body,
+    .dropdown-item,
+    input,
+    textarea,
+    .form-control {
+        -webkit-user-select: text;
+        -khtml-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+    }
+}

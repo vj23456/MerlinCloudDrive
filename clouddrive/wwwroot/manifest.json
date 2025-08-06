@@ -1,21 +1,28 @@
 {
-  "name": "CloudDrive",
+  "name": "CloudDrive2",
   "short_name": "CloudDrive",
-  "start_url": "./",
+  "description": "Modern cloud storage management interface",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
-  "prefer_related_applications": false,
+  "background_color": "#1e40af",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
-      "src": "icon-512.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "maskable any"
     },
     {
-      "src": "icon-192.png",
+      "src": "icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "maskable any"
     }
-  ]
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
 }
