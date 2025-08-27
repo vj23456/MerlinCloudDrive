@@ -17,6 +17,14 @@
 
 /* Fallback for browsers without dvh support - use JavaScript-calculated values */
 @media (max-width: 768px) {
+    :root {
+        /* Trim a bit from header height on mobile to remove the visual gap */
+        --mobile-header-trim: 8px;
+    }
+    /* Ensure the main content area has no extra top padding on mobile */
+    .app-content {
+        padding-top: 0 !important;
+    }
     .app-container {
         /* Use custom property set by JavaScript for mobile browser UI handling */
         height: calc(var(--vh, 1vh) * 100) !important;
@@ -57,6 +65,36 @@
         min-height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
         max-height: calc(var(--vh, 1vh) * 100 - var(--header-height, 48px)) !important;
     }
+
+    /* Normalize page header spacing on mobile (align with Tasks page) */
+    .app-content .page-header,
+    .app-content .page-header-compact,
+    .app-content .modern-header,
+    .about-page .page-header {
+        margin-top: 0 !important;
+        margin-bottom: 0.5rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    /* Remove wasted top space for first element inside content body */
+    .app-content .content-body {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* Also handle first-of-type to avoid text-node edge cases */
+    .app-content .content-body > *:first-child,
+    .app-content .content-body > div:first-of-type,
+    .app-content .content-body > section:first-of-type {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    /* Common page containers that often add top padding */
+    .membership-container {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
 }
 
 /* iOS specific fixes for Safari mobile browser UI */
@@ -91,7 +129,7 @@
         user-select: none;
         /* Prevent overscroll bounce */
         overscroll-behavior: none;
-        -webkit-overflow-scrolling: touch;
+    /* -webkit-overflow-scrolling removed to avoid compatibility warnings */
     }
     
     /* Allow text selection in specific areas */

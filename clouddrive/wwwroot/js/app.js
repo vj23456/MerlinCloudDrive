@@ -1,41 +1,176 @@
 // Ultra-aggressive cache clearing - USE ONLY when explicitly requested by user
 // This is designed for the "Clear Cache and Reload" button in About page
 // For normal operation, browser should use standard HTTP caching based on file modification times
-window.blazorClearCacheAndReload = () => {
-    // Step 1: Immediately bust all CSS cache before clearing
-    bustAllCssImmediately();
+window.blazorClearCacheAndReload = async () => {
+    console.log('[CACHE CLEAR] Starting comprehensive cache clearing process...');
     
-    // Step 2: Clear all browser caches aggressively
-    clearAllBrowserCaches().then(() => {
-        // Step 3: Clear Service Worker caches
-        return caches.keys().then(function (cacheNames) {
-            return Promise.all(
-                cacheNames.map(function (cacheName) {
-                    return caches.delete(cacheName);
-                })
-            );
-        });
-    }).then(() => {
+    try {
+        // Step 1: Clear all Service Worker registrations
+        console.log('[CACHE CLEAR] Step 1: Clearing Service Worker registrations...');
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(registration => registration.unregister()));
+        }
         
-        // Step 4: Aggressively clear all CSS including Blazor scoped CSS
-        return clearBlazorScopedCssCache();
+        // Step 2: Clear all Cache API caches
+        console.log('[CACHE CLEAR] Step 2: Clearing Cache API caches...');
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+        }
         
-    }).then(() => {
-        // Step 5: Clear JavaScript and other static resources
-        clearStaticResourceCache();
+        // Step 3: Clear IndexedDB databases
+        console.log('[CACHE CLEAR] Step 3: Clearing IndexedDB databases...');
+        if ('indexedDB' in window && indexedDB.databases) {
+            const databases = await indexedDB.databases();
+            await Promise.all(databases.map(db => {
+                return new Promise((resolve) => {
+                    const deleteReq = indexedDB.deleteDatabase(db.name);
+                    deleteReq.onsuccess = () => resolve();
+                    deleteReq.onerror = () => resolve();
+                    deleteReq.onblocked = () => resolve();
+                    setTimeout(() => resolve(), 2000); // Timeout fallback
+                });
+            }));
+        }
         
-        // Step 6: Wait a moment then perform simple reload (no post-reload cache busting)
-        setTimeout(() => {
-            performSimpleReload();
-        }, 500);
+        // Step 4: Skip localStorage and sessionStorage clearing (preserve user data)
+        console.log('[CACHE CLEAR] Step 4: Skipping localStorage/sessionStorage (preserving user data)...');
         
-    }).catch(error => {
-        // Force reload even if cache clearing fails
-        setTimeout(() => {
-            performSimpleReload();
-        }, 500);
-    });
+        // Step 5: Clear WebSQL (if available)
+        console.log('[CACHE CLEAR] Step 5: Clearing WebSQL...');
+        if (window.openDatabase) {
+            try {
+                window.openDatabase('', '', '', '');
+            } catch (e) {
+                // WebSQL not supported or already cleared
+            }
+        }
+        
+        // Step 6: Force clear all resource caches
+        console.log('[CACHE CLEAR] Step 6: Force clearing all resource caches...');
+        await forceClearAllResources();
+        
+        // Step 7: Add cache-busting meta tags
+        console.log('[CACHE CLEAR] Step 7: Adding cache-busting meta tags...');
+        addNoCacheMetaTags();
+        
+        // Step 8: Perform hard reload with maximum cache busting
+        console.log('[CACHE CLEAR] Step 8: Performing hard reload...');
+        performUltraHardReload();
+        
+    } catch (error) {
+        console.error('[CACHE CLEAR] Error during cache clearing:', error);
+        // Fallback to simple hard reload
+        performUltraHardReload();
+    }
 };
+
+// Helper function to force clear all resources
+async function forceClearAllResources() {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 15);
+    
+    // Clear all CSS links
+    const cssLinks = document.querySelectorAll('link[rel="stylesheet"]');
+    cssLinks.forEach((link, index) => {
+        const originalHref = link.href.split('?')[0];
+        const url = new URL(originalHref);
+        url.searchParams.set('v', timestamp + index);
+        url.searchParams.set('force-clear', randomId);
+        url.searchParams.set('no-cache', 'true');
+        url.searchParams.set('cache-bust', Date.now());
+        link.href = url.toString();
+    });
+    
+    // Clear all script sources
+    const scripts = document.querySelectorAll('script[src]');
+    scripts.forEach((script, index) => {
+        const originalSrc = script.src.split('?')[0];
+        const url = new URL(originalSrc);
+        url.searchParams.set('v', timestamp + index + 1000);
+        url.searchParams.set('force-clear', randomId);
+        url.searchParams.set('no-cache', 'true');
+        url.searchParams.set('cache-bust', Date.now());
+        script.src = url.toString();
+    });
+    
+    // Clear all images
+    const images = document.querySelectorAll('img[src]');
+    images.forEach((img, index) => {
+        const originalSrc = img.src.split('?')[0];
+        const url = new URL(originalSrc);
+        url.searchParams.set('v', timestamp + index + 2000);
+        url.searchParams.set('force-clear', randomId);
+        url.searchParams.set('cache-bust', Date.now());
+        img.src = url.toString();
+    });
+    
+    // Force DOM reflow
+    document.body.offsetHeight;
+}
+
+// Helper function to add no-cache meta tags
+function addNoCacheMetaTags() {
+    // Remove existing cache control meta tags
+    const existingMetas = document.querySelectorAll('meta[http-equiv="Cache-Control"], meta[http-equiv="Pragma"], meta[http-equiv="Expires"]');
+    existingMetas.forEach(meta => meta.remove());
+    
+    // Add new aggressive no-cache meta tags
+    const metaTags = [
+        { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate, max-age=0' },
+        { httpEquiv: 'Pragma', content: 'no-cache' },
+        { httpEquiv: 'Expires', content: '0' }
+    ];
+    
+    metaTags.forEach(metaInfo => {
+        const meta = document.createElement('meta');
+        meta.setAttribute('http-equiv', metaInfo.httpEquiv);
+        meta.setAttribute('content', metaInfo.content);
+        document.head.appendChild(meta);
+    });
+}
+
+// Helper function to perform ultra hard reload
+function performUltraHardReload() {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 15);
+    
+    try {
+        // Method 1: Try with location.replace (most aggressive)
+        const currentUrl = new URL(window.location.href);
+        
+        // Remove all existing cache busting parameters
+        const cacheBustParams = ['v', 'cache-bust', 'force-clear', 'no-cache', 'timestamp', 'reload'];
+        cacheBustParams.forEach(param => currentUrl.searchParams.delete(param));
+        
+        // Add new aggressive cache busting parameters
+        currentUrl.searchParams.set('v', timestamp);
+        currentUrl.searchParams.set('cache-bust', randomId);
+        currentUrl.searchParams.set('force-clear', 'ultra');
+        currentUrl.searchParams.set('no-cache', 'true');
+        currentUrl.searchParams.set('timestamp', timestamp);
+        currentUrl.searchParams.set('reload', 'hard');
+        
+        // Use location.replace to avoid history entry
+        window.location.replace(currentUrl.toString());
+        
+    } catch (e) {
+        try {
+            // Method 2: Try with location.reload(true)
+            window.location.reload(true);
+        } catch (e2) {
+            try {
+                // Method 3: Try with location.href assignment
+                const baseUrl = window.location.href.split('?')[0];
+                window.location.href = `${baseUrl}?v=${timestamp}&cache-bust=${randomId}&force-clear=ultra&reload=hard`;
+            } catch (e3) {
+                // Method 4: Last resort
+                window.location.reload();
+            }
+        }
+    }
+}
 
 // Simple file input trigger function
 window.triggerFileInputClick = (elementId) => {
@@ -839,5 +974,12 @@ window.scrollElementToEnd = (element) => {
     if (element && element.scrollLeft !== undefined) {
         // Scroll to the rightmost position
         element.scrollLeft = element.scrollWidth - element.clientWidth;
+    }
+};
+
+// Function to set checkbox indeterminate state
+window.setCheckboxIndeterminate = (checkbox, indeterminate) => {
+    if (checkbox) {
+        checkbox.indeterminate = indeterminate;
     }
 };

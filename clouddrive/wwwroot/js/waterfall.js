@@ -18,7 +18,9 @@ class WaterfallLayout {
             maxLineGap: options.maxLineGap || 300,    // Max column width
             align: options.align || 'left',           // Layout alignment
             autoResize: options.autoResize !== false, // Auto resize on window resize
-            interval: options.interval || 200,       // Debounce interval
+            interval: options.interval || 250,       // Debounce interval (slightly higher to reduce churn)
+            // Vertical spacing between stacked items (in px)
+            verticalGap: typeof options.verticalGap === 'number' ? options.verticalGap : 10,
             itemSelector: options.itemSelector || '.waterfall-item',
             ...options
         };
@@ -30,6 +32,11 @@ class WaterfallLayout {
         this.isDestroyed = false;
         this.loadedImages = new Set();
         this.columnCount = 1; // Track current column count for navigation
+    this.hasRendered = false; // Track if first render happened
+    this.initialImagesReady = false; // Gate first reveal until images ready or timeout
+    this.initialImageWaitTimer = null;
+    this.chunkSize = typeof options.chunkSize === 'number' ? options.chunkSize : 100; // Measure in chunks to avoid long blocks
+    this.firstRevealComplete = false; // After first stable reveal, don't re-add loading to avoid flicker
 
         // Bind methods
         this.reflowHandler = this.reflowHandler.bind(this);
@@ -46,6 +53,10 @@ class WaterfallLayout {
         // Set container styles
         this.container.style.position = 'relative';
         this.container.style.width = '100%';
+    // Mark container as JS-masonry active for CSS overrides
+    this.container.classList.add('js-masonry');
+    // Hide items while first layout computes
+    this.container.classList.add('loading');
 
         // Setup auto resize
         this.autoResizeHandler(this.options.autoResize);
@@ -53,6 +64,18 @@ class WaterfallLayout {
         // Setup image loading listeners
         this.container.addEventListener('load', this.handleImageLoad, true);
         this.container.addEventListener('error', this.handleImageLoad, true);
+
+        // If there are no images or all are already complete, we're ready
+        const imgs = Array.from(this.container.querySelectorAll('img'));
+        if (imgs.length === 0 || imgs.every(img => img.complete && img.naturalWidth > 0)) {
+            this.initialImagesReady = true;
+        } else {
+            // Fallback timeout to avoid long blank states
+            this.initialImageWaitTimer = setTimeout(() => {
+                this.initialImagesReady = true;
+                this.reflowHandler();
+            }, 450);
+        }
 
         // Initial reflow
         this.reflowHandler();
@@ -76,7 +99,7 @@ class WaterfallLayout {
     }
 
     // Main reflow function (vue-waterfall inspired)
-    reflow() {
+    async reflow() {
         if (this.isDestroyed || this.isReflowing) return;
 
         this.isReflowing = true;
@@ -85,6 +108,8 @@ class WaterfallLayout {
             const items = this.getItems();
             if (items.length === 0) {
                 this.isReflowing = false;
+                // Nothing to layout; ensure loading overlay is cleared
+                try { this.container.classList.remove('loading'); } catch {}
                 return;
             }
 
@@ -94,15 +119,40 @@ class WaterfallLayout {
                 return;
             }
 
-            // Calculate layout (vue-waterfall style)
-            const metas = this.getMetas(items);
+            // Hide items while computing for first render OR when many items/unpositioned to avoid stacked flash
+            const anyPositioned = this.container.querySelector('.waterfall-item.waterfall-positioned');
+            // Only use loading overlay until the first stable reveal completes to avoid flicker
+            const shouldShowLoading = !this.firstRevealComplete && (!this.hasRendered || !anyPositioned || items.length > 40);
+            if (shouldShowLoading) {
+                this.container.classList.add('loading');
+            }
+
+            // Compute target item width so we can measure metas at final width
+            const preColumnCount = this.getColumnCount(containerWidth);
+            const preColumnWidth = this.getColumnWidth(containerWidth, preColumnCount);
+            const targetItemWidth = preColumnWidth - 20; // subtract inner padding used in calculate()
+
+            // Calculate layout metas at target width (avoid later scaling mismatches)
+            const metas = await this.getMetasChunked(items, targetItemWidth);
             this.virtualRects = metas.map(() => ({}));
             this.calculate(metas, this.virtualRects);
 
             // Apply layout with slight delay to avoid flashing
             setTimeout(() => {
                 if (!this.isDestroyed) {
-                    this.render(this.virtualRects, metas);
+            this.render(this.virtualRects, metas);
+            // Stop hiding after styles are applied (double rAF)
+        if (this.hasRendered || this.initialImagesReady) {
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                if (!this.isDestroyed) {
+                                    this.container.classList.remove('loading');
+                    // Mark first reveal complete so we don't toggle loading again on subsequent reflows
+                    this.firstRevealComplete = true;
+                                }
+                            });
+                        });
+                    }
                     this.isReflowing = false;
                     this.emit('reflowed', { 
                         itemCount: items.length,
@@ -114,6 +164,7 @@ class WaterfallLayout {
         } catch (error) {
             console.error('Waterfall reflow error:', error);
             this.isReflowing = false;
+        try { this.container.classList.remove('loading'); } catch {}
         }
     }
 
@@ -122,68 +173,67 @@ class WaterfallLayout {
         return Array.from(this.container.querySelectorAll(this.options.itemSelector));
     }
 
-    // Get metadata for items (vue-waterfall style)
-    getMetas(items) {
-        return items.map((item, index) => {
-            const img = item.querySelector('img');
-            let width = this.options.lineGap;
+    // Get metadata for items (vue-waterfall style) in small chunks to avoid blocking the main thread
+    async getMetasChunked(items, targetItemWidth) {
+        const measureWidth = Math.max(0, targetItemWidth || this.options.lineGap);
+        const metas = new Array(items.length);
+
+        const computeMeta = (item, index) => {
+            // Only treat preview images inside .waterfall-image as image tiles
+            const previewImg = item.querySelector('.waterfall-image img');
+            let width = measureWidth;
             let height = 200; // default height
 
-            // Check if this is a folder item (waterfall-folder class)
-            const isFolder = item.querySelector('.waterfall-folder');
-            
-            if (isFolder) {
-                // Check if it's a cloud provider folder (has cloud-provider-icon)
-                const hasCloudIcon = isFolder.querySelector('.cloud-provider-icon');
-                
-                if (hasCloudIcon) {
-                    // Cloud provider folders use fixed height for consistent layout
-                    width = this.options.lineGap;
-                    height = 140;
-                } else {
-                    // Regular folders use dynamic height based on content
-                    width = this.options.lineGap;
-                    height = item.offsetHeight > 0 ? item.offsetHeight : 120;
-                    // Ensure minimum height for usability
-                    height = Math.max(height, 120);
-                }
-            } else if (img && img.naturalWidth && img.naturalHeight) {
-                width = this.options.lineGap;
-                // Calculate height based on aspect ratio
-                let calculatedHeight = (img.naturalHeight / img.naturalWidth) * width;
-                
-                // Only apply minimum height for extremely wide images (aspect ratio < 0.3)
-                // These are panoramic images that would result in very small heights
-                const aspectRatio = img.naturalHeight / img.naturalWidth;
-                
-                if (aspectRatio < 0.3) {
-                    // For extremely wide images, ensure minimum height
-                    // The 180px includes both image content and overlay space
-                    height = Math.max(calculatedHeight, 180);
-                } else {
-                    // For normal images, use the natural calculated height
-                    height = calculatedHeight;
-                }
+            // Check if this is a folder-like item
+            const isFolder = !!item.querySelector('.waterfall-folder');
+            const isFileFolder = !!item.querySelector('.waterfall-file-folder');
+
+            if (isFolder || isFileFolder) {
+                // Measure folder cards by actual DOM height at target width
+                const prevWidth = item.style.width;
+                const prevHeight = item.style.height;
+                item.style.width = width + 'px';
+                item.style.height = 'auto';
+                height = Math.max(item.scrollHeight || item.offsetHeight || 0, 120);
+                item.style.width = prevWidth;
+                item.style.height = prevHeight;
+            } else if (previewImg && previewImg.naturalWidth && previewImg.naturalHeight) {
+                // Use natural aspect ratio
+                width = measureWidth;
+                const aspectRatio = previewImg.naturalHeight / previewImg.naturalWidth;
+                const calculatedHeight = aspectRatio * width;
+                height = aspectRatio < 0.3 ? Math.max(calculatedHeight, 180) : calculatedHeight;
             } else if (item.offsetHeight > 0) {
-                width = this.options.lineGap;
-                height = item.offsetHeight;
-                
-                // Apply minimum height for non-image items too
-                height = Math.max(height, 140); // Min height for folders/files
+                // Other non-image items: measure similarly at target width
+                const prevWidth = item.style.width;
+                const prevHeight = item.style.height;
+                item.style.width = width + 'px';
+                item.style.height = 'auto';
+                height = Math.max(item.scrollHeight || item.offsetHeight || 0, 120);
+                item.style.width = prevWidth;
+                item.style.height = prevHeight;
             }
 
-            return {
-                element: item,
-                index: index,
-                width: width,
-                height: height
-            };
-        });
+            metas[index] = { element: item, index, width, height };
+        };
+
+        for (let i = 0; i < items.length; i += this.chunkSize) {
+            if (this.isDestroyed) return metas.filter(Boolean);
+            const end = Math.min(i + this.chunkSize, items.length);
+            for (let j = i; j < end; j++) {
+                computeMeta(items[j], j);
+            }
+            // Yield to the browser to keep UI responsive
+            await new Promise(requestAnimationFrame);
+        }
+
+        return metas;
     }
 
     // Calculate layout positions (vue-waterfall style)
     calculate(metas, rects) {
         const containerWidth = this.container.clientWidth;
+    const topOffset = this.options.verticalGap; // top spacing similar to vertical gap
         
         // Calculate columns
         const columnCount = this.getColumnCount(containerWidth);
@@ -191,7 +241,7 @@ class WaterfallLayout {
         this.columnCount = columnCount;
         
         const columnWidth = this.getColumnWidth(containerWidth, columnCount);
-        const columnHeights = new Array(columnCount).fill(0);
+    const columnHeights = new Array(columnCount).fill(topOffset);
 
         metas.forEach((meta, index) => {
             // Find shortest column
@@ -204,10 +254,8 @@ class WaterfallLayout {
             
             // Calculate dimensions
             const itemWidth = columnWidth - 20; // padding
-            // Use the height from meta (which already has minimum constraints applied)
-            // but scale it proportionally to the actual item width
-            const scaleFactor = itemWidth / meta.width;
-            const itemHeight = meta.height * scaleFactor;
+            // Metas are already measured at target width; no scaling needed
+            const itemHeight = meta.height;
             
             // Store rect
             rects[index] = {
@@ -217,12 +265,12 @@ class WaterfallLayout {
                 height: itemHeight
             };
 
-            // Update column height
-            columnHeights[shortestColumnIndex] = top + itemHeight + 20; // gap
+            // Update column height (apply configurable vertical gap)
+            columnHeights[shortestColumnIndex] = top + itemHeight + this.options.verticalGap;
         });
 
         // Set container height
-        const maxHeight = Math.max(...columnHeights);
+    const maxHeight = Math.max(...columnHeights);
         
         // Calculate responsive bottom padding based on screen size
         let bottomPadding = 16; // Default padding
@@ -236,9 +284,9 @@ class WaterfallLayout {
             bottomPadding = 12;
         }
         
-        // Add extra padding to ensure last row is fully visible 
-        // (matching the bottom padding from Files.razor.css)
-        const extraPadding = 48; // Additional padding for comfortable viewing
+    // Add extra padding to ensure last row is fully visible
+    // Tuned lower to match reduced vertical gap
+    const extraPadding = 36; // Additional padding for comfortable viewing
         this.container.style.height = (maxHeight + bottomPadding + extraPadding) + 'px';
     }
 
@@ -279,20 +327,32 @@ class WaterfallLayout {
                 element.style.left = rect.left + 'px';
                 element.style.top = rect.top + 'px';
                 element.style.width = rect.width + 'px';
+                // Explicitly set height so DOM box matches computed rect
+                // This prevents CSS-driven content height from altering the
+                // intended vertical rhythm and ensures consistent gaps
+                element.style.height = rect.height + 'px';
                 
-                // Progressive visibility (vue-waterfall style)
+                // Visibility
                 if (!element.classList.contains('waterfall-positioned')) {
-                    element.style.opacity = '0';
-                    element.style.transition = 'opacity 0.3s ease';
+                    // Mark positioned first so CSS can reveal only positioned items
                     element.classList.add('waterfall-positioned');
-                    
-                    // Fade in
-                    requestAnimationFrame(() => {
+                    if (!this.hasRendered) {
+                        // First render: show immediately, no animation
+                        element.style.transition = '';
                         element.style.opacity = '1';
-                    });
+                    } else {
+                        // Subsequent renders: soft fade-in for new items only
+                        element.style.transition = 'opacity 0.2s ease';
+                        element.style.opacity = '0';
+                        requestAnimationFrame(() => {
+                            element.style.opacity = '1';
+                        });
+                    }
                 }
             }
         });
+        // Mark first render completed
+        if (!this.hasRendered) this.hasRendered = true;
     }
 
     // Handle image loading for progressive layout
@@ -302,6 +362,13 @@ class WaterfallLayout {
             
             if (!this.loadedImages.has(imgSrc)) {
                 this.loadedImages.add(imgSrc);
+                // If all images are ready for the first reveal, mark and reflow
+                if (!this.hasRendered && !this.initialImagesReady) {
+                    const imgs = Array.from(this.container.querySelectorAll('img'));
+                    if (imgs.length === 0 || imgs.every(i => i.complete && i.naturalWidth > 0)) {
+                        this.initialImagesReady = true;
+                    }
+                }
                 this.reflowHandler();
             }
         }
@@ -340,6 +407,10 @@ class WaterfallLayout {
 
         // Clear timers
         clearTimeout(this.token);
+        if (this.initialImageWaitTimer) {
+            clearTimeout(this.initialImageWaitTimer);
+            this.initialImageWaitTimer = null;
+        }
 
         // Remove event listeners
         this.autoResizeHandler(false);
@@ -348,6 +419,10 @@ class WaterfallLayout {
 
         // Reset container
         this.container.style.height = '';
+    this.container.classList.remove('js-masonry');
+    this.container.classList.remove('loading');
+    this.container.classList.remove('calculating');
+    this.firstRevealComplete = false;
 
         // Reset items
         const items = this.getItems();
@@ -356,10 +431,14 @@ class WaterfallLayout {
             item.style.left = '';
             item.style.top = '';
             item.style.width = '';
+            item.style.height = '';
             item.style.opacity = '';
             item.style.transition = '';
             item.classList.remove('waterfall-positioned');
         });
+
+    // Reset flags
+    this.hasRendered = false;
 
         this.emit('destroyed');
     }
@@ -399,10 +478,55 @@ window.waterfallHelper = {
         const container = document.querySelector(selector);
         if (!container) return;
 
-        const instance = this.instances.get(container);
-        if (instance) {
-            instance.refresh();
+        let instance = this.instances.get(container);
+
+        // Detect a "stacked" bad state: JS-masonry active with items but none positioned yet
+        // This can happen if a reflow was interrupted by navigation/cleanup timing
+    const items = container.querySelectorAll('.waterfall-item');
+        const anyPositioned = container.querySelector('.waterfall-item.waterfall-positioned');
+        const isStacked = container.classList.contains('js-masonry') && items.length > 0 && !anyPositioned;
+    const firstRevealComplete = !!(this.instances.get(container)?.firstRevealComplete);
+
+        if (!instance) {
+            // No instance tracked; re-initialize if we have content or container is marked for masonry
+            if (isStacked) {
+                // Ensure items don't visibly overlap while we recover
+                container.classList.add('loading');
+            }
+            this.initializeLayout(selector);
+            return;
         }
+
+    if (isStacked) {
+            // Try a quick reflow first while hiding items to prevent visible stacking
+            container.classList.add('loading');
+            try { instance.refresh(); } catch {}
+
+            // If still not positioned shortly after, force a clean re-init with the same options
+            setTimeout(() => {
+                const stillUnpositioned = !container.querySelector('.waterfall-item.waterfall-positioned');
+                if (stillUnpositioned) {
+                    try {
+                        const opts = { ...instance.options };
+                        instance.destroy();
+                        this.instances.delete(container);
+                        const newInstance = new WaterfallLayout(container, opts);
+                        this.instances.set(container, newInstance);
+                    } catch (e) {
+                        console.error('Waterfall re-init after stacked state failed:', e);
+                    }
+                }
+            }, 120);
+            return;
+        }
+
+        // For large refreshes, show loading to avoid stacked flash even when some items are positioned
+    if (!firstRevealComplete && items.length > 40) {
+            container.classList.add('loading');
+        }
+
+        // Normal refresh path
+        instance.refresh();
     },
 
     // Update waterfall item size
@@ -567,6 +691,103 @@ window.waterfallHelper = {
         }
         
         return null;
+    }
+};
+
+// Scroll helpers that synchronize with waterfall layout
+window.waterfallScrollHelpers = {
+    // Wait until the target element is positioned by the waterfall layout and scroll it into view within .files-content
+    // selector: container selector (e.g., '.files-waterfall')
+    // elementId: DOM id of the waterfall item element
+    // options: { timeoutMs?: number, fastFallbackMs?: number, align?: 'center'|'start'|'end' }
+    scrollToItemAfterLayout: function(selector, elementId, options = {}) {
+        // Lower default timeout and add a fast provisional scroll to reduce wait
+        const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 1200;
+        const fastFallbackMs = typeof options.fastFallbackMs === 'number' ? options.fastFallbackMs : 200;
+        const align = options.align || 'center';
+
+        return new Promise((resolve) => {
+            const container = document.querySelector(selector);
+            const filesContent = document.querySelector('.files-content');
+            const element = document.getElementById(elementId);
+            if (!container || !filesContent || !element) {
+                resolve(false);
+                return;
+            }
+
+            const start = performance.now();
+            let provisionalDone = false;
+
+            const doScroll = () => {
+                // Ensure element has been positioned by the layout
+                const positioned = element.classList.contains('waterfall-positioned');
+                const containerHeight = parseFloat(container.style.height) || 0;
+                if (positioned && containerHeight > 0) {
+                    const elementTop = element.offsetTop;
+                    const viewHeight = filesContent.clientHeight;
+                    const elementHeight = element.offsetHeight || 0;
+                    let targetTop = 0;
+                    if (align === 'center') {
+                        targetTop = elementTop - (viewHeight / 2) + (elementHeight / 2);
+                    } else if (align === 'start') {
+                        targetTop = elementTop - 16; // small padding
+                    } else {
+                        targetTop = Math.max(0, elementTop - viewHeight + elementHeight + 16);
+                    }
+                    filesContent.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+                    cleanup();
+                    resolve(true);
+                    return true;
+                }
+                return false;
+            };
+
+            let rafId = null;
+            let provisionalTimer = null;
+            const tick = () => {
+                if (doScroll()) return;
+                if (performance.now() - start > timeoutMs) {
+                    cleanup();
+                    resolve(false);
+                    return;
+                }
+                rafId = requestAnimationFrame(tick);
+            };
+
+            const onReflow = () => {
+                doScroll();
+            };
+
+            const cleanup = () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                if (provisionalTimer) clearTimeout(provisionalTimer);
+                container.removeEventListener('reflowed', onReflow);
+            };
+
+            // Provisional early scroll so users don't wait for layout to finish
+            const doProvisional = () => {
+                if (provisionalDone) return;
+                provisionalDone = true;
+                try {
+                    const elementTop = element.offsetTop;
+                    const viewHeight = filesContent.clientHeight;
+                    const elementHeight = element.offsetHeight || 0;
+                    let targetTop = 0;
+                    if (align === 'center') {
+                        targetTop = elementTop - (viewHeight / 2) + (elementHeight / 2);
+                    } else if (align === 'start') {
+                        targetTop = elementTop - 16;
+                    } else {
+                        targetTop = Math.max(0, elementTop - viewHeight + elementHeight + 16);
+                    }
+                    filesContent.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+                } catch {}
+            };
+
+            container.addEventListener('reflowed', onReflow);
+            provisionalTimer = setTimeout(doProvisional, fastFallbackMs);
+            rafId = requestAnimationFrame(tick);
+        });
     }
 };
 

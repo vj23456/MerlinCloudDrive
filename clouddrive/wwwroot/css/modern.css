@@ -677,6 +677,19 @@ body {
     max-height: 100vh;
 }
 
+/* Logs page specific overrides - same as tasks page */
+.content-body:has(.logs-page) {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Override app-content for logs page - make it full viewport */
+.app-content:has(.logs-page) {
+    overflow: hidden;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
 /* Dashboard Styles */
 .dashboard-header {
     text-align: center;
@@ -1700,4 +1713,30 @@ body.desktop-device .app-sidebar.collapsed {
 
 .waterfall-folder, .waterfall-image, .waterfall-file-folder {
     position: relative;
+}
+
+/* iPhone-specific modal optimizations */
+@media (max-width: 430px) and (-webkit-min-device-pixel-ratio: 2) {
+    /* Global modal overlay improvements for iPhone */
+    .modal-overlay {
+        /* Ensure full viewport usage on iPhone */
+        height: 100vh !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        /* Proper safe area handling */
+        padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom)) !important;
+    }
+    
+    /* Improve touch scrolling for all modal content on iPhone */
+    .modal-content {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure buttons are touch-friendly on iPhone */
+    .modal-footer .btn,
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
 }

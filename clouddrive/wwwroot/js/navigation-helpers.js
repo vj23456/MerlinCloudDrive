@@ -1,5 +1,50 @@
 // Navigation and DOM helper functions
 
+// Internal shared scroll state to coordinate different helpers
+window.__filesScrollState = window.__filesScrollState || {
+    suppressTopResetUntil: 0,
+    cancelTopResetUntil: 0, // hard-cancel any pending top resets while focused-item scrolling
+    userScrollUntil: 0,     // short window after user scroll where auto top-resets are suppressed
+    progScrollDepth: 0      // nesting counter for programmatic scrolls
+};
+
+// Internal helpers to mark programmatic scroll activity so user scroll detection doesn't fire
+function _beginProgScroll() {
+    try { window.__filesScrollState.progScrollDepth = (window.__filesScrollState.progScrollDepth || 0) + 1; } catch {}
+}
+function _endProgScroll() {
+    try { window.__filesScrollState.progScrollDepth = Math.max(0, (window.__filesScrollState.progScrollDepth || 1) - 1); } catch {}
+}
+function _isProgScrolling() {
+    try { return (window.__filesScrollState.progScrollDepth || 0) > 0; } catch { return false; }
+}
+
+// Capture user-initiated scrolls on the main files container and briefly suppress auto top resets
+(function setupFilesUserScrollSuppression(){
+    const markUserScroll = () => {
+        if (_isProgScrolling()) return; // ignore programmatic scrolls
+        try {
+            const now = Date.now();
+            // 1200ms grace period after a user scroll
+            window.__filesScrollState.userScrollUntil = now + 1200;
+            // Also extend general suppression to minimize fights with pending resets
+            const maxUntil = now + 1200;
+            window.__filesScrollState.suppressTopResetUntil = Math.max(window.__filesScrollState.suppressTopResetUntil || 0, maxUntil);
+        } catch {}
+    };
+
+    // Use a capturing listener at document level to catch scrolls even if container re-renders
+    try {
+        document.addEventListener('scroll', (e) => {
+            const t = e.target;
+            if (!t) return;
+            if (t.id === 'main-files-content' || (t.classList && t.classList.contains('files-content'))) {
+                markUserScroll();
+            }
+        }, true);
+    } catch {}
+})();
+
 // Global focus helper function for keyboard navigation
 window.focusElement = function(elementSelector) {
     const element = document.querySelector(elementSelector);
@@ -25,50 +70,38 @@ window.elementExists = function(elementIdOrSelector) {
 // Global scroll helper function for keyboard navigation
 window.scrollToElement = function(elementId) {
     const element = document.getElementById(elementId);
-    if (!element) {
-        return false;
-    }
-    
-    // Find the scrollable container - try multiple selectors for different view modes
-    let scrollContainer = element.closest('.files-content');
-    if (!scrollContainer) {
-        scrollContainer = element.closest('.files-list-container');
-    }
-    if (!scrollContainer) {
-        scrollContainer = element.closest('.files-grid-container');
-    }
-    if (!scrollContainer) {
-        scrollContainer = element.closest('.main-content');
-    }
-    
-    if (!scrollContainer) {
+    if (!element) return false;
 
+    // Prefer the main files content container explicitly
+    let scrollContainer = document.getElementById('main-files-content');
+    if (!scrollContainer) {
+        // Fall back to nearest .files-content ancestor
+        scrollContainer = element.closest('.files-content');
+    }
+    if (!scrollContainer) return false;
+
+    try {
+        const er = element.getBoundingClientRect();
+        const cr = scrollContainer.getBoundingClientRect();
+
+        const above = er.top < cr.top;
+        const below = er.bottom > cr.bottom;
+        const left = er.left < cr.left;
+        const right = er.right > cr.right;
+        const outOfView = above || below || left || right;
+
+        if (!outOfView) return true;
+
+        // Compute a centered scrollTop relative to container
+        const prev = scrollContainer.style.scrollBehavior;
+        try { scrollContainer.style.scrollBehavior = 'auto'; } catch {}
+        const desired = scrollContainer.scrollTop + (er.top - cr.top) - (scrollContainer.clientHeight/2 - element.offsetHeight/2);
+        scrollContainer.scrollTo({ top: Math.max(0, desired), behavior: 'auto' });
+        try { scrollContainer.style.scrollBehavior = prev || ''; } catch {}
+        return true;
+    } catch (e) {
         return false;
     }
-    
-    // Get element and container positions
-    const elementRect = element.getBoundingClientRect();
-    const containerRect = scrollContainer.getBoundingClientRect();
-    
-    // Calculate if element is out of view
-    const isAboveView = elementRect.top < containerRect.top;
-    const isBelowView = elementRect.bottom > containerRect.bottom;
-    const isLeftOfView = elementRect.left < containerRect.left;
-    const isRightOfView = elementRect.right > containerRect.right;
-    
-    // Only scroll if element is out of view
-    if (isAboveView || isBelowView || isLeftOfView || isRightOfView) {
-        element.scrollIntoView({
-            behavior: 'auto',
-            block: 'center',
-            inline: 'nearest'
-        });
-        return true;
-    } else {
-        return true;
-    }
-    
-    return true;
 };
 
 // Helper function to wait for view container to be ready
@@ -78,13 +111,14 @@ window.waitForViewContainer = function(viewMode, maxRetries = 10) {
         
         function checkContainer() {
             retries++;
-            const selectors = {
-                'list': '.files-list-container',
-                'grid': '.files-grid-container',
-                'table': '.files-table-container'
-            };
-            
-            const selector = selectors[viewMode] || '.files-content';
+            // Prefer our main files scroll container; fall back to generic files-content
+            const selectorList = [
+                '#main-files-content',
+                '.files-content',
+                '.files-list',
+                '.files-grid'
+            ];
+            const selector = selectorList.join(', ');
             const container = document.querySelector(selector);
             
             if (container || retries >= maxRetries) {
@@ -100,25 +134,182 @@ window.waitForViewContainer = function(viewMode, maxRetries = 10) {
 };
 
 // Enhanced scroll function that waits for the correct view container
-window.scrollToElementInView = function(elementId, viewMode) {
+window.scrollToElementInView = function(elementId, viewMode, options) {
     return new Promise(async (resolve) => {
-
-        
-        // First wait for the view container to be ready
+    try { console.debug('[FILES_TRACE_JS] scrollToElementInView start', { elementId, viewMode, options }); } catch {}
         const containerReady = await window.waitForViewContainer(viewMode);
-        if (!containerReady) {
+        if (!containerReady) { resolve(false); return; }
 
-            resolve(false);
-            return;
+        // Backward-compatible options
+        const cfg = {
+            align: (options && options.align) || 'center', // 'center' | 'start' | 'end'
+            offset: (options && typeof options.offset === 'number') ? options.offset : 0,
+            marginPx: (options && typeof options.marginPx === 'number') ? options.marginPx : 2,
+            maxAttempts: (options && typeof options.maxAttempts === 'number') ? options.maxAttempts : 40,
+            interval: (options && typeof options.interval === 'number') ? options.interval : 30,
+            suppressTopResetMs: (options && typeof options.suppressTopResetMs === 'number') ? options.suppressTopResetMs : 800
+        };
+
+    // Suppress page top resets while we are performing a focused-item scroll
+    try {
+    _beginProgScroll();
+        var now = Date.now();
+        window.__filesScrollState.suppressTopResetUntil = now + cfg.suppressTopResetMs;
+        // Also set a hard-cancel window so delayed top-reset loops abort entirely
+        window.__filesScrollState.cancelTopResetUntil = now + cfg.suppressTopResetMs + 200;
+    } catch {}
+
+        const maxAttempts = cfg.maxAttempts; // ~1.2s at 30ms by default
+        const interval = cfg.interval;
+        let attempts = 0;
+
+    const tryCenter = () => {
+            attempts++;
+            const el = document.getElementById(elementId);
+            const container = document.getElementById('main-files-content') || document.querySelector('.files-content');
+            // If container is missing, bail
+            if (!container) { resolve(false); return; }
+            // If element isn't in DOM yet, keep trying until maxAttempts
+            if (!el) {
+                if (attempts >= maxAttempts) { resolve(false); return; }
+                if (attempts < 5 && 'requestAnimationFrame' in window) {
+                    requestAnimationFrame(tryCenter);
+                } else {
+                    setTimeout(tryCenter, interval);
+                }
+                return;
+            }
+
+            // Recompute rects each attempt to account for reflow
+            const er = el.getBoundingClientRect();
+            const cr = container.getBoundingClientRect();
+            const margin = cfg.marginPx;
+            const visible = er.top >= cr.top + margin && er.bottom <= cr.bottom - margin;
+            if (visible) { try { console.debug('[FILES_TRACE_JS] element already visible'); } catch {} resolve(true); return; }
+
+            // Compute desired scrollTop based on alignment
+            const prev = container.style.scrollBehavior;
+            try { container.style.scrollBehavior = 'auto'; } catch {}
+            let desired;
+            if (cfg.align === 'start') {
+                desired = container.scrollTop + (er.top - cr.top) - cfg.offset;
+            } else if (cfg.align === 'end') {
+                desired = container.scrollTop + (er.bottom - cr.bottom) + cfg.offset;
+            } else {
+                // center
+                desired = container.scrollTop + (er.top - cr.top) - (container.clientHeight/2 - el.offsetHeight/2) - cfg.offset;
+            }
+            const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+            const clamped = Math.min(maxTop, Math.max(0, desired));
+            try { console.debug('[FILES_TRACE_JS] container.scrollTo', { top: clamped }); } catch {}
+            container.scrollTo({ top: clamped, behavior: 'auto' });
+            try { container.style.scrollBehavior = prev || ''; } catch {}
+
+            if (attempts >= maxAttempts) { try { console.debug('[FILES_TRACE_JS] scrollToElementInView max attempts reached'); } catch {} resolve(false); return; }
+            // Use rAF for the first few frames, then fall back to setTimeout
+            if (attempts < 5 && 'requestAnimationFrame' in window) {
+                requestAnimationFrame(tryCenter);
+            } else {
+                setTimeout(tryCenter, interval);
+            }
+        };
+
+        // Kick off with a small defer to ensure layout is ready
+        if ('requestAnimationFrame' in window) {
+            requestAnimationFrame(tryCenter);
+        } else {
+            setTimeout(tryCenter, interval);
         }
-        
-        // Add a small delay to ensure the view has fully rendered
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Now try to scroll to the specific element
-        const success = window.scrollToElement(elementId);
-        resolve(success);
+
+    // End programmatic scroll marking shortly after the sequence starts
+    setTimeout(_endProgScroll, 0);
     });
+};
+
+// Pre-scroll a list container by approximate item index and item height (for Virtualize)
+// containerSelector: CSS selector for scroll container (e.g., '#main-files-content')
+// index: zero-based index within the current page
+// itemSize: estimated row height in px
+// extraOffset: extra px to account for sentinel rows or headers
+window.scrollListToApproxIndex = function(containerSelector, index, itemSize, extraOffset = 0) {
+    try {
+        const container = document.querySelector(containerSelector);
+        if (!container) return false;
+        const top = Math.max(0, (index * itemSize) + (extraOffset || 0) - 8);
+        const prev = container.style.scrollBehavior;
+        try { container.style.scrollBehavior = 'auto'; } catch {}
+    try { console.debug('[FILES_TRACE_JS] scrollListToApproxIndex', { top, index, itemSize, extraOffset }); } catch {}
+        container.scrollTo({ top, behavior: 'auto' });
+        try { container.style.scrollBehavior = prev || ''; } catch {}
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
+// Wait until a scroll container has been idle (no scroll events) for a duration, or until a max timeout
+// selector: CSS selector for the scroll container (e.g., '#main-files-content')
+// idleMs: how long the container must be idle to resolve (default 250ms)
+// maxWaitMs: maximum time to wait before resolving regardless (default 1200ms)
+window.waitForScrollIdle = function(selector, idleMs = 250, maxWaitMs = 1200) {
+    return new Promise((resolve) => {
+        try {
+            const container = document.querySelector(selector) || document.querySelector('.files-content');
+            if (!container) {
+                resolve(true);
+                return;
+            }
+
+            let idleTimer = null;
+            let resolved = false;
+
+            const cleanup = () => {
+                if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+                container.removeEventListener('scroll', onScroll, { passive: true });
+            };
+
+            const resolveOnce = () => {
+                if (resolved) return;
+                resolved = true;
+                cleanup();
+                resolve(true);
+            };
+
+            const onScroll = () => {
+                if (idleTimer) { clearTimeout(idleTimer); }
+                idleTimer = setTimeout(resolveOnce, Math.max(50, idleMs));
+            };
+
+            // If container isn't currently scrolling, still wait a tiny bit to allow initial renders
+            idleTimer = setTimeout(resolveOnce, Math.max(80, idleMs));
+            container.addEventListener('scroll', onScroll, { passive: true });
+
+            // Hard cap to avoid waiting too long
+            setTimeout(resolveOnce, Math.max(idleMs, maxWaitMs));
+        } catch (e) {
+            resolve(true);
+        }
+    });
+};
+
+// Read current scroll state of a container for smarter scheduling
+// Returns an object: { top, height, client, maxTop, atTop, atBottom, nearBottom }
+window.getScrollState = function(selector, nearPx = 200) {
+    try {
+        const el = document.querySelector(selector) || document.querySelector('.files-content');
+        if (!el) return null;
+        const top = el.scrollTop || 0;
+        const client = el.clientHeight || 0;
+        const height = el.scrollHeight || 0;
+        const maxTop = Math.max(0, height - client);
+        const atTop = top <= 1;
+        const atBottom = top >= maxTop - 1;
+        const nearBottom = top >= Math.max(0, maxTop - (typeof nearPx === 'number' ? nearPx : 200));
+    try { console.debug('[FILES_TRACE_JS] getScrollState', { top, height, client, maxTop, atTop, atBottom, nearBottom }); } catch {}
+    return { top, height, client, maxTop, atTop, atBottom, nearBottom };
+    } catch (e) {
+        return null;
+    }
 };
 
 // TreeView helper functions for finding and scrolling to nodes
@@ -967,8 +1158,10 @@ window.waterfallSizeHelpers = {
     
     // Size presets with proper values for the waterfall layout
     sizePresets: {
-        'XS': { label: 'Extra Small', width: 180, preview: 24, mobileOnly: true },
-        'S': { label: 'Small', width: 220, preview: 32, mobileOnly: true },
+    // Make XS available on desktop as well
+    'XS': { label: 'Extra Small', width: 180, preview: 24 },
+        // Make S available on desktop as well
+        'S': { label: 'Small', width: 220, preview: 32 },
         'M': { label: 'Medium', width: 280, preview: 40 },
         'L': { label: 'Large', width: 350, preview: 48 },
         'XL': { label: 'Extra Large', width: 450, preview: 56 }
@@ -1135,8 +1328,8 @@ window.waterfallSizeHelpers = {
             </div>
         `;
         
-        // Position dropdown relative to button
-        this.positionDropdown(dropdown, buttonElement);
+    // Position dropdown relative to button (with safe fallback if element is not yet ready)
+    this.positionDropdown(dropdown, buttonElement);
         
         // Add to DOM
         document.body.appendChild(dropdown);
@@ -1176,26 +1369,39 @@ window.waterfallSizeHelpers = {
     
     // Position dropdown relative to button
     positionDropdown: function(dropdown, buttonElement) {
-        const buttonRect = buttonElement.getBoundingClientRect();
+        let buttonRect = null;
+        try {
+            if (buttonElement && typeof buttonElement.getBoundingClientRect === 'function') {
+                buttonRect = buttonElement.getBoundingClientRect();
+            }
+        } catch (e) {
+            buttonRect = null;
+        }
+
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
-        // Default position below button
-        let top = buttonRect.bottom + 8;
-        let left = buttonRect.left;
-        
-        // Adjust if dropdown would go off screen
         const dropdownWidth = 320; // Approximate width
         const dropdownHeight = 300; // Approximate height for preset options
-        
-        if (left + dropdownWidth > viewportWidth - 20) {
-            left = buttonRect.right - dropdownWidth;
+
+        // Default position (top-right corner area) if button rect unavailable
+        let top = 56; // below header
+        let left = Math.max(20, viewportWidth - dropdownWidth - 20);
+
+        if (buttonRect) {
+            // Default position below button
+            top = buttonRect.bottom + 8;
+            left = buttonRect.left;
+
+            // Adjust if dropdown would go off screen
+            if (left + dropdownWidth > viewportWidth - 20) {
+                left = buttonRect.right - dropdownWidth;
+            }
+
+            if (top + dropdownHeight > viewportHeight - 20) {
+                top = buttonRect.top - dropdownHeight - 8;
+            }
         }
-        
-        if (top + dropdownHeight > viewportHeight - 20) {
-            top = buttonRect.top - dropdownHeight - 8;
-        }
-        
+
         dropdown.style.position = 'fixed';
         dropdown.style.top = top + 'px';
         dropdown.style.left = left + 'px';
@@ -1324,45 +1530,36 @@ window.waterfallSizeHelpers = {
     }
 };
 
+// Prevent browser auto scroll restoration across SPA navigations
+try { if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } } catch {}
+
 // Page navigation scroll reset helper
 window.resetPageScroll = function() {
     try {
-        // First, reset window scroll
-        window.scrollTo(0, 0);
-        
-        // Reset scroll position of main content areas
-        const contentElement = document.querySelector('.app-content');
-        if (contentElement) {
-            contentElement.scrollTop = 0;
-            contentElement.scrollLeft = 0;
+    try { console.debug('[FILES_TRACE_JS] resetPageScroll invoked'); } catch {}
+    // If a focused-item scroll is active, do not perform any top reset
+    try {
+        var now = Date.now();
+        if (window.__filesScrollState && (now < window.__filesScrollState.suppressTopResetUntil || now < window.__filesScrollState.cancelTopResetUntil)) {
+            try { console.debug('[FILES_TRACE_JS] resetPageScroll suppressed/canceled'); } catch {}
+            return false;
         }
-        
-        // Reset content body scroll
-        const bodyElement = document.querySelector('.content-body');
-        if (bodyElement) {
-            bodyElement.scrollTop = 0;
-            bodyElement.scrollLeft = 0;
-        }
-        
-        // Reset article scroll (the main content wrapper)
-        const articleElement = document.querySelector('article');
-        if (articleElement) {
-            articleElement.scrollTop = 0;
-            articleElement.scrollLeft = 0;
-        }
-        
-        // Reset any other potential scrollable containers
-        const scrollableContainers = document.querySelectorAll('.files-container, .files-content, .main-content, .app-main');
-        scrollableContainers.forEach(container => {
-            if (container) {
-                container.scrollTop = 0;
-                container.scrollLeft = 0;
-            }
-        });
-        
-        // Force a repaint to ensure changes are applied
-        document.body.offsetHeight;
-        
+    } catch {}
+    // Reset the window scroll to ensure fixed header doesn't overlap content
+    try { console.debug('[FILES_TRACE_JS] window.scrollTo(0,0)'); window.scrollTo(0, 0); } catch {}
+    // Also reset document-level scroll element if any
+    try { console.debug('[FILES_TRACE_JS] document.scrollTop=0'); (document.scrollingElement || document.documentElement || document.body).scrollTop = 0; } catch {}
+    // Reset app-content scroll if it has its own scrolling
+    try { const ac = document.querySelector('.app-content'); if (ac) { console.debug('[FILES_TRACE_JS] .app-content.scrollTop=0'); ac.scrollTop = 0; } } catch {}
+    // Then reset the main files scroll container
+        const container = document.getElementById('main-files-content') || document.querySelector('.files-content');
+        if (!container) return false;
+        const prev = container.style.scrollBehavior;
+        try { container.style.scrollBehavior = 'auto'; } catch {}
+        try { console.debug('[FILES_TRACE_JS] files container scrollTop=0'); } catch {}
+        container.scrollTop = 0;
+        container.scrollLeft = 0;
+        try { container.style.scrollBehavior = prev || ''; } catch {}
         return true;
     } catch (error) {
         return false;
@@ -1373,29 +1570,115 @@ window.resetPageScroll = function() {
 window.resetPageScrollDelayed = function() {
     return new Promise((resolve) => {
         let attempts = 0;
-        const maxAttempts = 5;
-        const delay = 50; // 50ms between attempts
-        
+    const maxAttempts = 16;
+    const delay = 80; // ms between attempts (~1.3s total)
+
         const attemptReset = () => {
             attempts++;
-            const success = window.resetPageScroll();
+            try { console.debug('[FILES_TRACE_JS] resetPageScrollDelayed attempt', attempts); } catch {}
+            // If a focused-item scroll is in progress, abort the reset loop to avoid fighting it
+            let suppressed = false;
+            let canceled = false;
+            let userActive = false;
+            try {
+                const now = Date.now();
+                suppressed = !!(window.__filesScrollState && now < window.__filesScrollState.suppressTopResetUntil);
+                canceled = !!(window.__filesScrollState && now < window.__filesScrollState.cancelTopResetUntil);
+                userActive = !!(window.__filesScrollState && now < window.__filesScrollState.userScrollUntil);
+            } catch { suppressed = false; canceled = false; }
+            if (canceled || suppressed || userActive) {
+                try { console.debug('[FILES_TRACE_JS] resetPageScrollDelayed aborted (suppressed/canceled)'); } catch {}
+                // Do not manipulate window/container scroll during focused-item scroll
+                // End the loop early to prevent a late top reset after suppression window
+                resolve(true);
+                return;
+            }
+
+            // Ensure window is at top so fixed app header never overlaps Files header
+            try { console.debug('[FILES_TRACE_JS] window.scrollTo({top:0})'); window.scrollTo && window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch {}
             
-            if (success && attempts < maxAttempts) {
-                // Wait a bit and try again to ensure it sticks
-                setTimeout(() => {
-                    window.resetPageScroll();
-                    if (attempts < maxAttempts) {
-                        setTimeout(attemptReset, delay);
-                    } else {
-                        resolve(true);
-                    }
-                }, delay);
+            // If a focused-item scroll is in progress, skip container reset on this attempt
+            let ok = false;
+            // (already computed suppressed above)
+            if (!suppressed) {
+                ok = window.resetPageScroll();
+            }
+
+            // Keep retrying a few times even if not yet successful (DOM may not be ready)
+            if (attempts < maxAttempts) {
+                setTimeout(attemptReset, delay);
             } else {
-                resolve(success);
+                // Resolve true if any attempt succeeded; otherwise false
+                resolve(!!ok);
             }
         };
-        
-        // Start the reset attempts
+
         attemptReset();
     });
+};
+
+// Files-only: reset the main files container to top immediately (no window scroll)
+// selector: defaults to '#main-files-content', falls back to '.files-content'
+window.resetFilesContainerScrollImmediate = function(selector = '#main-files-content') {
+    try {
+        const container = document.querySelector(selector) || document.querySelector('.files-content');
+        if (!container) { return false; }
+        // If the user just scrolled, don't fight them
+        try {
+            const now = Date.now();
+            if (window.__filesScrollState && now < window.__filesScrollState.userScrollUntil) {
+                return false;
+            }
+        } catch {}
+        const hasScrollbar = (container.scrollHeight - container.clientHeight) > 1;
+        const notAtTop = (container.scrollTop || 0) > 0;
+        if (hasScrollbar && notAtTop) {
+            const prev = container.style.scrollBehavior;
+            try { container.style.scrollBehavior = 'auto'; } catch {}
+            try { console.debug('[FILES_TRACE_JS] resetFilesContainerScrollImmediate: top=0'); } catch {}
+            _beginProgScroll();
+            container.scrollTop = 0;
+            container.scrollLeft = 0;
+            try { container.style.scrollBehavior = prev || ''; } catch {}
+            // Clear programmatic mark on next tick
+            setTimeout(_endProgScroll, 0);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+};
+
+// Focus helper with retries to ensure element is in the DOM and visible (useful for mobile overlays)
+window.focusSelector = function(selector, attempts = 8, interval = 50) {
+    try {
+        let tries = 0;
+        const tryFocus = () => {
+            tries++;
+            const el = document.querySelector(selector);
+            if (el && typeof el.focus === 'function') {
+                // Defer a tick to ensure CSS transitions finished (mobile overlays)
+                setTimeout(() => {
+                    try {
+                        el.focus({ preventScroll: true });
+                        // Move caret to end if it's an input
+                        if (typeof el.setSelectionRange === 'function') {
+                            const len = el.value ? el.value.length : 0;
+                            try { el.setSelectionRange(len, len); } catch { /* ignore */ }
+                        }
+                    } catch { /* ignore */ }
+                }, 0);
+                return true;
+            }
+            if (tries < attempts) {
+                setTimeout(tryFocus, interval);
+                return false;
+            }
+            return false;
+        };
+        return tryFocus();
+    } catch (e) {
+        return false;
+    }
 };

@@ -14,6 +14,15 @@ window.mobileDetection = {
         return isMobile;
     },
     
+    // Compute and set CSS var for actual header height
+    setHeaderHeightVar: () => {
+        const header = document.querySelector('.app-header');
+        const h = header ? header.offsetHeight : null;
+        if (h && h > 0) {
+            document.documentElement.style.setProperty('--header-height', `${h}px`);
+        }
+    },
+
     // Detect and handle mobile browser UI (bottom toolbar, address bar, etc.)
     handleMobileBrowserUI: () => {
         // Only run on mobile devices
@@ -40,19 +49,30 @@ window.mobileDetection = {
             }
         };
         
-        // Set initial viewport height
+    // Set initial viewport height
         setViewportHeight();
+    // Also set actual header height var
+    window.mobileDetection.setHeaderHeightVar();
         
         // Update on resize and orientation change
-        window.addEventListener('resize', setViewportHeight);
+        window.addEventListener('resize', () => {
+            setViewportHeight();
+            window.mobileDetection.setHeaderHeightVar();
+        });
         window.addEventListener('orientationchange', () => {
             // Small delay to account for browser UI animation
-            setTimeout(setViewportHeight, 100);
+            setTimeout(() => {
+                setViewportHeight();
+                window.mobileDetection.setHeaderHeightVar();
+            }, 100);
         });
         
         // Handle Visual Viewport API if available (better mobile browser UI detection)
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', setViewportHeight);
+            window.visualViewport.addEventListener('resize', () => {
+                setViewportHeight();
+                window.mobileDetection.setHeaderHeightVar();
+            });
             window.visualViewport.addEventListener('scroll', setViewportHeight);
         }
         
@@ -121,6 +141,7 @@ window.mobileDetection = {
         // Re-apply mobile handling when DOM changes
         const observer = new MutationObserver(() => {
             window.mobileDetection.preventContentCovering();
+            window.mobileDetection.setHeaderHeightVar();
         });
         
         observer.observe(document.body, {

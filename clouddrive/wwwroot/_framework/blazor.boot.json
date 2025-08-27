@@ -1,7 +1,7 @@
 {
   "entryAssembly": "CloudDriveModern",
   "resources": {
-    "hash": "sha256-Loa37euMoOUeYn49lJIFCaElUqWQm/PTkBPCT+OfVjc=",
+    "hash": "sha256-qOKs3RtCPf0YsDd3mtsZWvL1a25ipB4E8tKA4fLcHiQ=",
     "runtime": {
       "dotnet.js": "sha256-eaJTmow4t8eE7FZMZR5Ja41JMOefGCbIYDTdpclGsac=",
       "dotnet.timezones.blat": "sha256-gbATD5HDsHYtW8vdPYh9iSBY4O5CjvMeCSF5xXWF1xo=",
@@ -10,7 +10,7 @@
     },
     "coreAssembly": {},
     "assembly": {
-      "CloudDriveModern.dll": "sha256-J/fhz4t30H5EzGzqJLrPE0ANBy3Q+guudC4Y+EgF71Q=",
+      "CloudDriveModern.dll": "sha256-zvS3xeAOCSJd4UJPnz3KXVuvn2OAGZpGlkUFe4QJbXQ=",
       "Google.Protobuf.dll": "sha256-29jy/wgi0vwBZK4lXAZhzoSvyboyijCkpQul9U/+6JY=",
       "Grpc.Core.Api.dll": "sha256-wUrE1Ml+A88fBYksrrY0ZFesJcixt+4+Eqcg/KofsuI=",
       "Grpc.Net.Client.dll": "sha256-Dr9RsJfFX9he4zq8kxzkb79cJtAwDoR1oC4SZIEZPNc=",
@@ -213,7 +213,7 @@
     },
     "satelliteResources": {
       "zh-CN": {
-        "zh-CN/CloudDriveModern.resources.dll": "sha256-FKgkMHi0LnTXattof8o3aHFVMpBzBy7nk6zxTOYJ+yg="
+        "zh-CN/CloudDriveModern.resources.dll": "sha256-5mkiPzy+K+yeq/dLXdJfux8u59QqIju7+7huL/0aMP0="
       }
     },
     "runtimeAssets": {
