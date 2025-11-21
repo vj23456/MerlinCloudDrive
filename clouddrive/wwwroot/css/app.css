@@ -125,3 +125,47 @@ a, .btn-link {
     .loading-progress-text:after {
         content: var(--blazor-load-percentage-text, "Loading");
     }
+
+/* List view column resizer - global styles (not scoped to component) */
+.column-resizer {
+    position: absolute;
+    right: -4px; /* Center the 8px width on the border */
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 11;
+    transition: background 0.2s ease;
+}
+
+.column-resizer::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 60%;
+    background: rgba(var(--primary-color-rgb, 13, 110, 253), 0.2); /* Slight visibility even without hover */
+    transition: background 0.2s ease;
+}
+
+.column-resizer:hover::before,
+.is-resizing .column-resizer::before {
+    background: var(--primary-color, #0d6efd);
+}
+
+.column-resizer:hover,
+.is-resizing .column-resizer {
+    background: rgba(var(--primary-color-rgb, 13, 110, 253), 0.1);
+}
+
+.list-header.is-resizing {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: col-resize;
+}
+
+.list-header-cell.being-resized {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+}

@@ -453,25 +453,29 @@ window.waterfallHelper = {
         const container = document.querySelector(selector);
         if (!container) {
             console.warn('Waterfall container not found:', selector);
-            return null;
+            return false;
         }
 
         // Clean up existing instance
         this.cleanup(selector);
 
-        // Create new instance
-        const instance = new WaterfallLayout(container, {
-            lineGap: 280,
-            minLineGap: 200,
-            maxLineGap: 350,
-            align: 'center',
-            interval: 200,
-            itemSelector: '.waterfall-item',
-            ...options
-        });
+        try {
+            const instance = new WaterfallLayout(container, {
+                lineGap: 280,
+                minLineGap: 200,
+                maxLineGap: 350,
+                align: 'center',
+                interval: 200,
+                itemSelector: '.waterfall-item',
+                ...options
+            });
 
-        this.instances.set(container, instance);
-        return instance;
+            this.instances.set(container, instance);
+            return true;
+        } catch (error) {
+            console.error('Waterfall initialization failed:', error);
+            return false;
+        }
     },
 
     refreshLayout: function(selector) {
@@ -482,10 +486,11 @@ window.waterfallHelper = {
 
         // Detect a "stacked" bad state: JS-masonry active with items but none positioned yet
         // This can happen if a reflow was interrupted by navigation/cleanup timing
-    const items = container.querySelectorAll('.waterfall-item');
+        const items = container.querySelectorAll('.waterfall-item');
         const anyPositioned = container.querySelector('.waterfall-item.waterfall-positioned');
-        const isStacked = container.classList.contains('js-masonry') && items.length > 0 && !anyPositioned;
-    const firstRevealComplete = !!(this.instances.get(container)?.firstRevealComplete);
+        const hasRendered = !!(instance && instance.hasRendered);
+        const isStacked = hasRendered && container.classList.contains('js-masonry') && items.length > 0 && !anyPositioned;
+        const firstRevealComplete = !!(instance && instance.firstRevealComplete);
 
         if (!instance) {
             // No instance tracked; re-initialize if we have content or container is marked for masonry
@@ -696,6 +701,116 @@ window.waterfallHelper = {
 
 // Scroll helpers that synchronize with waterfall layout
 window.waterfallScrollHelpers = {
+    // Scroll to item using event-based approach - wait for layout to complete
+    // selector: container selector (e.g., '.files-waterfall')
+    // elementId: DOM id of the waterfall item element
+    // options: { align?: 'center'|'start'|'end', maxWaitMs?: number }
+    scrollToItemDirectly: function(selector, elementId, options = {}) {
+        const align = options.align || 'center';
+        const maxWaitMs = options.maxWaitMs || 8000; // Generous timeout for very large folders
+        const filesContent = document.querySelector('.files-content');
+        const container = document.querySelector(selector);
+        
+        if (!filesContent || !container) {
+            console.log('[WATERFALL_SCROLL] Container not found');
+            return Promise.resolve(false);
+        }
+
+        return new Promise((resolve) => {
+            const startTime = performance.now();
+            let reflowListener = null;
+            let checkInterval = null;
+
+            const cleanup = () => {
+                if (reflowListener) {
+                    container.removeEventListener('reflowed', reflowListener);
+                }
+                if (checkInterval) {
+                    clearInterval(checkInterval);
+                }
+            };
+
+            const doScroll = () => {
+                const element = document.getElementById(elementId);
+
+                if (!element) {
+                    return false;
+                }
+
+                // Check if element is positioned
+                const isPositioned = element.classList.contains('waterfall-positioned');
+                const hasOffsetTop = element.offsetTop > 0 || element.offsetParent !== null;
+
+                if (isPositioned && hasOffsetTop) {
+                    try {
+                        const elementTop = element.offsetTop;
+                        const viewHeight = filesContent.clientHeight;
+                        const elementHeight = element.offsetHeight || 0;
+                        let targetTop = 0;
+
+                        if (align === 'center') {
+                            targetTop = elementTop - (viewHeight / 2) + (elementHeight / 2);
+                        } else if (align === 'start') {
+                            targetTop = elementTop - 16;
+                        } else {
+                            targetTop = Math.max(0, elementTop - viewHeight + elementHeight + 16);
+                        }
+
+                        const elapsed = Math.round(performance.now() - startTime);
+                        filesContent.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+                        cleanup();
+                        resolve(true);
+                        return true;
+                    } catch (e) {
+                        console.error('[WATERFALL_SCROLL] Error scrolling:', e);
+                        cleanup();
+                        resolve(false);
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+            
+            // Listen for reflow completion events
+            reflowListener = () => {
+                if (doScroll()) {
+                    // Successfully scrolled
+                    return;
+                }
+                // Element not ready yet, wait for next reflow
+            };
+            
+            container.addEventListener('reflowed', reflowListener);
+            
+            // Also periodically check in case element is already positioned
+            // or gets positioned between reflow events
+            let checkCount = 0;
+            checkInterval = setInterval(() => {
+                checkCount++;
+
+                if (doScroll()) {
+                    // Successfully scrolled
+                    return;
+                }
+
+                // Check timeout
+                const elapsed = performance.now() - startTime;
+                if (elapsed > maxWaitMs) {
+                    const element = document.getElementById(elementId);
+                    console.log(`[WATERFALL_SCROLL] Timeout after ${Math.round(elapsed)}ms (${checkCount} checks). Element ${element ? 'found' : 'not found'}, positioned: ${element ? element.classList.contains('waterfall-positioned') : 'N/A'}`);
+                    cleanup();
+                    resolve(false);
+                }
+            }, 100); // Check every 100ms
+            
+            // Try immediate scroll in case element is already ready
+            if (doScroll()) {
+                // Successfully scrolled immediately
+            }
+        });
+    },
+
     // Wait until the target element is positioned by the waterfall layout and scroll it into view within .files-content
     // selector: container selector (e.g., '.files-waterfall')
     // elementId: DOM id of the waterfall item element

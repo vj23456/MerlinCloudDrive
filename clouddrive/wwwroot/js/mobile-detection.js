@@ -1,16 +1,50 @@
 // Mobile detection utilities for CloudDrive2
 window.mobileDetection = {
-    // Check if current device is mobile based on screen width
-    isMobile: () => window.innerWidth <= 768,
+    // Check if current device is mobile (phones only, NOT tablets like iPad)
+    // Tablets/iPads use desktop layout but with touch interactions
+    isMobile: () => {
+        // Only treat as mobile if screen width is phone-sized (≤ 768px)
+        // iPads and larger tablets will use desktop layout with touch support
+        return window.innerWidth <= 768;
+    },
+    
+    // Check if device has touch capability (for touch-optimized interactions)
+    isTouchDevice: () => {
+        return (
+            'ontouchstart' in window ||
+            navigator.maxTouchPoints > 0 ||
+            navigator.msMaxTouchPoints > 0
+        );
+    },
+    
+    // Detect if device is an iPad specifically
+    isIPad: () => {
+        return /iPad/.test(navigator.userAgent) || 
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    },
     
     // Check media query match
     matchesMedia: (query) => window.matchMedia(query).matches,
     
-    // Add CSS class to body based on screen size
+    // Add CSS class to body based on device type
     updateBodyClass: () => {
-        const isMobile = window.innerWidth <= 768;
+        const isMobile = window.mobileDetection.isMobile();
+        const isTouch = window.mobileDetection.isTouchDevice();
+        const isIPad = window.mobileDetection.isIPad();
+        
         document.body.classList.toggle('mobile-device', isMobile);
         document.body.classList.toggle('desktop-device', !isMobile);
+        document.body.classList.toggle('touch-device', isTouch);
+        
+        // Add specific device type classes for fine-grained control
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        document.body.classList.toggle('ios-device', isIOS);
+        document.body.classList.toggle('ipad-device', isIPad);
+        document.body.classList.toggle('android-device', isAndroid);
+        
         return isMobile;
     },
     

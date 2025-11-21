@@ -3,14 +3,65 @@
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
     
-    // If this looks like an OAuth callback and we're in a popup, take over completely
-    if (params.has('oauth_type') && params.has('refresh_token') && 
-        window.opener && window.opener !== window && !window.opener.closed) {
+    // Check if this looks like an OAuth callback (has required OAuth parameters)
+    const hasOAuthParams = params.has('oauth_type') && params.has('refresh_token');
+    
+    if (!hasOAuthParams) {
+        return; // Not an OAuth callback, exit early
+    }
+    
+    console.log('[OAuth] IMMEDIATE: OAuth callback detected - URL:', window.location.href);
+    console.log('[OAuth] IMMEDIATE: window.opener available:', !!window.opener);
+    console.log('[OAuth] IMMEDIATE: window.opener not closed:', window.opener && !window.opener.closed);
+    
+    // Determine if we're in a popup/new tab scenario OR in an embedded browser
+    const isPopupWindow = window.opener && window.opener !== window && !window.opener.closed;
+    const isEmbeddedBrowser = !window.opener && hasOAuthParams;
+    
+    console.log('[OAuth] IMMEDIATE: isPopupWindow:', isPopupWindow);
+    console.log('[OAuth] IMMEDIATE: isEmbeddedBrowser:', isEmbeddedBrowser);
+    
+    // Process OAuth callback if we're either in a popup OR in an embedded browser with OAuth params
+    if (isPopupWindow || isEmbeddedBrowser) {
         
-        console.log('[OAuth] IMMEDIATE: OAuth callback detected in new tab - taking over completely');
+        console.log('[OAuth] IMMEDIATE: Processing OAuth callback');
+        
+        // Check if this is a third-party login flow
+        // Method 1: Check URL parameters directly for third_party_login=true
+        let isThirdPartyLogin = params.has('third_party_login') && params.get('third_party_login') === 'true';
+        console.log('[OAuth] IMMEDIATE: URL has third_party_login =', params.get('third_party_login'));
+        
+        // Method 2: Check the state parameter (for providers that return it)
+        if (!isThirdPartyLogin) {
+            const stateParam = params.get('state');
+            if (stateParam) {
+                try {
+                    const decodedState = decodeURIComponent(stateParam);
+                    console.log('[OAuth] IMMEDIATE: Decoded state:', decodedState);
+                    isThirdPartyLogin = decodedState.includes('third_party_login=true');
+                } catch (e) {
+                    console.log('[OAuth] IMMEDIATE: Error decoding state:', e);
+                }
+            }
+        }
+        
+        // Method 3: Fallback - check localStorage (may not work cross-origin)
+        if (!isThirdPartyLogin) {
+            try {
+                const flagValue = localStorage.getItem('oauth_is_third_party_login');
+                console.log('[OAuth] IMMEDIATE: localStorage oauth_is_third_party_login =', flagValue);
+                isThirdPartyLogin = flagValue === 'true';
+            } catch (e) {
+                console.log('[OAuth] IMMEDIATE: Could not access localStorage:', e);
+            }
+        }
+        
+        console.log('[OAuth] IMMEDIATE: Flow type - isThirdPartyLogin:', isThirdPartyLogin);
         
         // Store OAuth data
         window.oauthCallbackDetected = true;
+        window.isThirdPartyLoginFlow = isThirdPartyLogin;
+        window.isEmbeddedBrowserMode = isEmbeddedBrowser;
         window.oauthCallbackData = {
             oauth_type: params.get('oauth_type'),
             refresh_token: params.get('refresh_token'),
@@ -19,6 +70,8 @@
         };
         
         console.log('[OAuth] IMMEDIATE: OAuth data stored:', window.oauthCallbackData);
+        console.log('[OAuth] IMMEDIATE: Third-party login flow:', window.isThirdPartyLoginFlow);
+        console.log('[OAuth] IMMEDIATE: Embedded browser mode:', window.isEmbeddedBrowserMode);
         
         // Set flag for Blazor
         window.isOAuthCallbackTab = true;

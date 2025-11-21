@@ -19,29 +19,89 @@ function _isProgScrolling() {
     try { return (window.__filesScrollState.progScrollDepth || 0) > 0; } catch { return false; }
 }
 
-// Capture user-initiated scrolls on the main files container and briefly suppress auto top resets
-(function setupFilesUserScrollSuppression(){
+// Capture user-initiated scrolls on any scrollable container and suppress auto top resets
+(function setupUserScrollSuppression(){
+    let lastUserInteraction = 0;
+    let userScrollActive = false;
+    
+    // Mark user interaction (more conservative approach)
+    const markUserInteraction = () => {
+        lastUserInteraction = Date.now();
+        userScrollActive = true;
+        // Clear after a shorter period to allow programmatic scrolls to work
+        setTimeout(() => {
+            if (Date.now() - lastUserInteraction >= 800) {
+                userScrollActive = false;
+            }
+        }, 800);
+    };
+    
     const markUserScroll = () => {
         if (_isProgScrolling()) return; // ignore programmatic scrolls
+        // Only suppress if there was recent user interaction
+        if (!userScrollActive && Date.now() - lastUserInteraction > 500) return;
+        
         try {
             const now = Date.now();
-            // 1200ms grace period after a user scroll
-            window.__filesScrollState.userScrollUntil = now + 1200;
-            // Also extend general suppression to minimize fights with pending resets
-            const maxUntil = now + 1200;
+            // Shorter grace period - only 800ms after user scroll  
+            window.__filesScrollState.userScrollUntil = now + 800;
+            // Also extend general suppression but keep it reasonable
+            const maxUntil = now + 800;
             window.__filesScrollState.suppressTopResetUntil = Math.max(window.__filesScrollState.suppressTopResetUntil || 0, maxUntil);
         } catch {}
     };
 
-    // Use a capturing listener at document level to catch scrolls even if container re-renders
+    // Track user interactions that indicate intent to scroll
     try {
-        document.addEventListener('scroll', (e) => {
-            const t = e.target;
-            if (!t) return;
-            if (t.id === 'main-files-content' || (t.classList && t.classList.contains('files-content'))) {
+        // Mouse interactions
+        document.addEventListener('mousedown', markUserInteraction, { passive: true, capture: true });
+        
+        // Wheel events (most common user scroll trigger)
+        document.addEventListener('wheel', (e) => {
+            markUserInteraction();
+            if (Math.abs(e.deltaY) > 5 || Math.abs(e.deltaX) > 5) { // Threshold to ignore tiny movements
                 markUserScroll();
             }
+        }, { passive: true, capture: true });
+        
+        // Touch events for mobile
+        let touchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                markUserInteraction();
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true, capture: true });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                const touchY = e.touches[0].clientY;
+                const deltaY = Math.abs(touchY - touchStartY);
+                if (deltaY > 10) { // Threshold for meaningful touch scroll
+                    markUserScroll();
+                }
+            }
+        }, { passive: true, capture: true });
+        
+        // Only capture scroll events on main containers and only if user initiated
+        document.addEventListener('scroll', (e) => {
+            const t = e.target;
+            if (!t || _isProgScrolling()) return;
+            
+            // Only mark as user scroll if there was recent user interaction
+            if (userScrollActive) {
+                // Detect scroll on any major container (not just files)
+                if (t.id === 'main-files-content' || 
+                    (t.classList && (t.classList.contains('files-content') || 
+                                     t.classList.contains('page-container') || 
+                                     t.classList.contains('cloudstorages-container') || 
+                                     t.classList.contains('mounts-container') ||
+                                     t.classList.contains('content-container')))) {
+                    markUserScroll();
+                }
+            }
         }, true);
+        
     } catch {}
 })();
 
@@ -372,7 +432,6 @@ window.treeViewHelpers = {
     // Scroll to a specific element within the tree container (lazy scrolling - only if totally invisible)
     scrollToElement: function(treeContainer, element) {
         if (!treeContainer || !element) {
-
             return false;
         }
         
@@ -399,7 +458,7 @@ window.treeViewHelpers = {
                 return true;
             }
             
-            // Use instant scrollIntoView for immediate navigation
+            // Use scrollIntoView for navigation - CSS scroll-behavior: auto makes this instant
             element.scrollIntoView({ 
                 behavior: 'instant', 
                 block: 'center',
@@ -408,6 +467,72 @@ window.treeViewHelpers = {
             
             return true;
             
+        } catch (error) {
+            return false;
+        }
+    },
+
+    getScrollTop: function() {
+        try {
+            const container = document.querySelector('.tree-content');
+            if (!container) {
+                return 0;
+            }
+            const scrollTop = container.scrollTop || 0;
+            return scrollTop;
+        } catch (error) {
+            console.error('[treeViewHelpers.getScrollTop] Error:', error);
+            return 0;
+        }
+    },
+
+    restoreScrollTop: function(scrollTop) {
+        try {
+            const container = document.querySelector('.tree-content');
+            if (!container) {
+                return false;
+            }
+            
+            const prev = container.style.scrollBehavior;
+            try { container.style.scrollBehavior = 'auto'; } catch {}
+            container.scrollTop = Math.max(0, scrollTop || 0);
+            try { container.style.scrollBehavior = prev || ''; } catch {}
+            return true;
+        } catch (error) {
+            console.error('[treeViewHelpers.restoreScrollTop] Error:', error);
+            return false;
+        }
+    },
+
+    scrollIntoViewFallback: function(nodePath) {
+        try {
+            const element = document.querySelector(`[data-path="${nodePath}"]`);
+            if (!element) {
+                return false;
+            }
+
+            element.scrollIntoView({ 
+                behavior: 'instant', 
+                block: 'center',
+                inline: 'start'
+            });
+            return true;
+        } catch (error) {
+            return false;
+        }
+    },
+
+    scrollToTop: function() {
+        try {
+            const container = document.querySelector('.tree-content');
+            if (!container) {
+                return false;
+            }
+            const prev = container.style.scrollBehavior;
+            try { container.style.scrollBehavior = 'auto'; } catch {}
+            container.scrollTop = 0;
+            try { container.style.scrollBehavior = prev || ''; } catch {}
+            return true;
         } catch (error) {
             return false;
         }
@@ -1100,6 +1225,31 @@ window.settingsHelpers = {
 
 // Theme manager for real-time theme switching
 window.themeManager = {
+    // Helper function to safely detect dark mode preference (mobile-compatible)
+    detectSystemDarkMode: function() {
+        try {
+            // Check if matchMedia is available
+            if (!window.matchMedia) {
+                console.warn('[THEME] matchMedia not available, defaulting to light mode');
+                return false;
+            }
+            
+            // Query the media preference
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Some mobile browsers might return null or undefined for matches
+            if (mediaQuery === null || typeof mediaQuery.matches === 'undefined') {
+                console.warn('[THEME] matchMedia query returned invalid result, defaulting to light mode');
+                return false;
+            }
+            
+            return mediaQuery.matches;
+        } catch (error) {
+            console.error('[THEME] Error detecting system dark mode:', error);
+            return false;
+        }
+    },
+    
     setTheme: function(theme) {
         try {
             
@@ -1109,9 +1259,9 @@ window.themeManager = {
             // Apply the theme immediately
             let actualTheme = theme;
             
-            // If auto theme, detect system preference
+            // If auto theme, detect system preference safely
             if (theme === 'auto') {
-                const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDarkMode = this.detectSystemDarkMode();
                 actualTheme = isDarkMode ? 'dark' : 'light';
             }
             
@@ -1145,7 +1295,7 @@ window.themeManager = {
     getActualTheme: function() {
         const savedTheme = this.getCurrentTheme();
         if (savedTheme === 'auto') {
-            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            return this.detectSystemDarkMode() ? 'dark' : 'light';
         }
         return savedTheme;
     }
@@ -1570,8 +1720,8 @@ window.resetPageScroll = function() {
 window.resetPageScrollDelayed = function() {
     return new Promise((resolve) => {
         let attempts = 0;
-    const maxAttempts = 16;
-    const delay = 80; // ms between attempts (~1.3s total)
+        const maxAttempts = 4; // REDUCED from 16 to 4 to prevent memory leaks
+        const delay = 100; // ms between attempts (~400ms total)
 
         const attemptReset = () => {
             attempts++;
@@ -1619,23 +1769,25 @@ window.resetPageScrollDelayed = function() {
 
 // Files-only: reset the main files container to top immediately (no window scroll)
 // selector: defaults to '#main-files-content', falls back to '.files-content'
-window.resetFilesContainerScrollImmediate = function(selector = '#main-files-content') {
+window.resetFilesContainerScrollImmediate = function(selector = '#main-files-content', force = false) {
     try {
         const container = document.querySelector(selector) || document.querySelector('.files-content');
         if (!container) { return false; }
-        // If the user just scrolled, don't fight them
-        try {
-            const now = Date.now();
-            if (window.__filesScrollState && now < window.__filesScrollState.userScrollUntil) {
-                return false;
-            }
-        } catch {}
+        // If the user just scrolled, don't fight them (unless forced)
+        if (!force) {
+            try {
+                const now = Date.now();
+                if (window.__filesScrollState && now < window.__filesScrollState.userScrollUntil) {
+                    return false;
+                }
+            } catch {}
+        }
         const hasScrollbar = (container.scrollHeight - container.clientHeight) > 1;
         const notAtTop = (container.scrollTop || 0) > 0;
         if (hasScrollbar && notAtTop) {
             const prev = container.style.scrollBehavior;
             try { container.style.scrollBehavior = 'auto'; } catch {}
-            try { console.debug('[FILES_TRACE_JS] resetFilesContainerScrollImmediate: top=0'); } catch {}
+            try { console.debug('[FILES_TRACE_JS] resetFilesContainerScrollImmediate: top=0', { force }); } catch {}
             _beginProgScroll();
             container.scrollTop = 0;
             container.scrollLeft = 0;

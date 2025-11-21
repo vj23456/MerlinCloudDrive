@@ -511,13 +511,14 @@ body {
 
 /* Sidebar Styles */
 .app-sidebar {
+    position: relative;
     width: var(--sidebar-width);
     min-width: 200px;
     max-width: 500px;
     background: var(--bg-primary);
     border-right: 1px solid var(--border-color);
     transition: width 0.3s ease, border-right 0.3s ease;
-    overflow: hidden; /* Remove scrollbar from main sidebar */
+    overflow: visible; /* Allow overlay controls to render outside */
     height: 100%; /* Ensure sidebar takes full height */
     flex-shrink: 0; /* Prevent sidebar from shrinking */
 }
@@ -1614,15 +1615,23 @@ body.desktop-device .app-sidebar.collapsed {
 }
 
 /* Compact Breadcrumb Styles */
+/* Ensure breadcrumb container stretches across navigation row */
 .breadcrumb-compact {
     width: 100%;
     max-width: 100%;
-    overflow: hidden; /* No horizontal scrolling */
+    overflow: visible; /* Allow dropdown to overflow */
     position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-compact nav {
+    flex: 1 1 auto;
+    width: 100%;
 }
 
 .breadcrumb-compact .breadcrumb {
-    gap: 0.125rem; /* Very small gap between items */
+    gap: 0; /* No gap - separators handle spacing */
     margin-bottom: 0;
     flex-wrap: nowrap;
     white-space: nowrap;
@@ -1631,42 +1640,88 @@ body.desktop-device .app-sidebar.collapsed {
     padding: 0.25rem 0; /* Reduced padding */
     width: 100%;
     max-width: 100%;
-    overflow: hidden; /* Ensure no overflow */
+    flex: 1 1 auto;
+    overflow-x: hidden; /* Hide horizontal overflow */
+    overflow-y: visible; /* Allow dropdown to show vertically */
     background-color: transparent;
 }
 
 .breadcrumb-compact .breadcrumb-item {
     font-size: 0.875rem; /* Slightly smaller text */
-    flex-shrink: 1; /* Allow items to shrink */
+    flex: 0 0 auto; /* Don't allow shrinking - use calculated width */
     white-space: nowrap;
-    overflow: hidden;
     min-width: 0; /* Allow flex items to shrink below content size */
     position: relative;
+    box-sizing: border-box; /* Include any borders/padding in width */
+    overflow: hidden; /* Clip overflowing content by default */
+    /* Width is set dynamically via inline style in C# */
+}
+
+/* Non-truncated items use overflow hidden for CSS ellipsis */
+.breadcrumb-compact .breadcrumb-item:not(.truncated) {
+    overflow: hidden; /* Clip content for CSS ellipsis */
+}
+
+/* Truncated items ALSO need overflow hidden to prevent overlap */
+.breadcrumb-compact .breadcrumb-item.truncated {
+    overflow: hidden; /* Clip content to prevent overlapping */
 }
 
 .breadcrumb-compact .breadcrumb-item:first-child {
-    flex-shrink: 0; /* Home icon never shrinks */
+    flex: 0 0 auto; /* Home icon never shrinks or grows */
+}
+
+.breadcrumb-compact .breadcrumb-item.last-item {
+    font-weight: 500; /* Emphasize current location */
+    min-width: 40px; /* Ensure last item is always visible */
+    flex: 0 1 auto; /* Same as other items - respect calculated width */
+}
+
+/* Ellipsis item needs overflow visible for dropdown */
+.breadcrumb-compact .breadcrumb-item.ellipsis-item {
+    overflow: visible !important; /* Allow dropdown to show */
+    position: relative;
+    flex: 0 0 auto; /* Fixed size for ellipsis */
 }
 
 .breadcrumb-compact .breadcrumb-item + .breadcrumb-item::before {
-    margin: 0 0.125rem; /* Very small margin around separator */
+    margin: 0 0.375rem; /* Consistent spacing around separator */
     flex-shrink: 0; /* Separators don't shrink */
     content: ">";
     font-size: 0.75rem;
     color: var(--text-muted);
+    display: inline-block;
 }
 
 .breadcrumb-compact .breadcrumb-item a {
-    padding: 0.125rem 0.25rem; /* Very compact padding */
+    padding: 0.25rem 0.5rem; /* Consistent padding for all items */
     border-radius: var(--border-radius);
-    transition: background-color var(--transition-duration);
+    transition: all var(--transition-duration);
     white-space: nowrap;
     display: inline-block;
     text-decoration: none;
+    color: var(--text-secondary);
+    box-sizing: border-box; /* Include padding in width calculations */
+    overflow: hidden; /* Prevent text overflow */
+    text-overflow: ellipsis; /* Add ellipsis for overflow (backup) */
+}
+
+/* Non-truncated items use CSS ellipsis as fallback */
+.breadcrumb-compact .breadcrumb-item:not(.truncated) a {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Truncated items use smart middle truncation (handled in code) */
+.breadcrumb-compact .breadcrumb-item.truncated a {
+    overflow: hidden; /* Still clip to prevent overlap */
+    text-overflow: clip; /* No CSS ellipsis - we handle it in code */
+}
+
+.breadcrumb-compact .breadcrumb-item.last-item a {
     max-width: 100%;
-    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
 }
 
 .breadcrumb-compact .breadcrumb-item a:hover {
@@ -1681,11 +1736,113 @@ body.desktop-device .app-sidebar.collapsed {
     margin-right: 0.25rem;
 }
 
-/* Truncated breadcrumb items */
-.breadcrumb-compact .breadcrumb-item.truncated a {
-    max-width: 120px; /* Base max width for truncation */
+.breadcrumb-compact .breadcrumb-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 24px;
+    padding: 0 0.5rem !important;
+    color: var(--text-muted) !important;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-duration);
 }
 
+.breadcrumb-compact .breadcrumb-ellipsis:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color) !important;
+    transform: scale(1.05);
+}
+
+.breadcrumb-compact .breadcrumb-ellipsis i {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Breadcrumb dropdown menu */
+.breadcrumb-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.25rem;
+    min-width: 200px;
+    max-width: 300px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1050;
+    padding: 0.25rem 0;
+    display: none !important; /* Force hide by default */
+    flex-direction: column !important; /* Force vertical layout */
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.breadcrumb-dropdown-menu.show {
+    display: flex !important; /* Force show when active */
+    flex-direction: column !important; /* Force vertical layout */
+    animation: dropdownFadeIn 0.15s ease-out;
+}
+
+/* Also support Bootstrap's dropdown show class on parent */
+.breadcrumb-item.ellipsis-item.show .breadcrumb-dropdown-menu {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.breadcrumb-dropdown-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all var(--transition-duration);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.875rem; /* Explicit base font size */
+}
+
+.breadcrumb-dropdown-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+.breadcrumb-dropdown-item i {
+    margin-right: 0.75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-dropdown-item:hover i {
+    color: var(--primary-color);
+}
+
+.breadcrumb-dropdown-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Truncated items: title attribute shows full text on hover */
 .breadcrumb-compact .breadcrumb-item.truncated a[title] {
     cursor: help;
 }
@@ -1695,11 +1852,61 @@ body.desktop-device .app-sidebar.collapsed {
     .breadcrumb-compact .breadcrumb-item.truncated a {
         max-width: 80px;
     }
+    
+    .breadcrumb-compact .breadcrumb-item.last-item a {
+        max-width: 120px;
+    }
+    
+    .breadcrumb-dropdown-menu {
+        max-width: 260px;
+    }
+    
+    /* Better touch targets for tablets */
+    .breadcrumb-dropdown-item {
+        padding: 0.375rem 0.875rem !important; /* Minimal vertical padding */
+        font-size: 0.95rem !important;
+        min-height: 36px !important; /* Reduced min-height for tighter spacing */
+        line-height: 1.2 !important; /* Tighter line height */
+    }
+    
+    .breadcrumb-dropdown-item i {
+        font-size: 0.95rem !important;
+    }
+    
+    .breadcrumb-dropdown-text {
+        font-size: 0.95rem !important;
+        line-height: 1.2 !important;
+    }
 }
 
 @media (max-width: 480px) {
     .breadcrumb-compact .breadcrumb-item.truncated a {
         max-width: 60px;
+    }
+    
+    .breadcrumb-compact .breadcrumb-item.last-item a {
+        max-width: 100px;
+    }
+    
+    .breadcrumb-dropdown-menu {
+        max-width: 280px;
+    }
+    
+    .breadcrumb-dropdown-item {
+        padding: 0.375rem 1rem !important; /* Minimal vertical padding */
+        font-size: 1rem !important; /* Larger font for better readability */
+        min-height: 38px !important; /* Reduced min-height for tighter spacing */
+        line-height: 1.2 !important; /* Tighter line height */
+    }
+    
+    .breadcrumb-dropdown-item i {
+        font-size: 1rem !important; /* Larger icon for better visibility */
+        margin-right: 0.75rem;
+    }
+    
+    .breadcrumb-dropdown-text {
+        font-size: 1rem !important; /* Ensure text is also larger */
+        line-height: 1.2 !important;
     }
 }
 

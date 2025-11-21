@@ -29,7 +29,7 @@
 
         var handleMouseWheel = function(e) {
             e = e || window.event;
-            
+
             // Check if image is zoomed in - if so, let PhotoSwipe handle panning
             var currentZoomLevel = pswp.getZoomLevel ? pswp.getZoomLevel() : 1;
             var initialZoomLevel = pswp.currItem && pswp.currItem.initialZoomLevel ? pswp.currItem.initialZoomLevel : 1;

@@ -183,8 +183,18 @@
                 
 
                 
-                // Check system preference
-                const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                // Check system preference with error handling for mobile browsers
+                let systemDarkMode = false;
+                try {
+                    if (window.matchMedia) {
+                        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                        if (darkModeQuery && typeof darkModeQuery.matches !== 'undefined') {
+                            systemDarkMode = darkModeQuery.matches;
+                        }
+                    }
+                } catch (error) {
+                    console.error('[THEME-INIT] Error detecting system dark mode:', error);
+                }
 
                 
                 if (savedTheme === 'auto') {
@@ -266,6 +276,23 @@
                 document.documentElement.style.setProperty('--waterfall-item-width', width + 'px');
 
                 
+                // Pre-apply saved list column widths to prevent flash
+                try {
+                    const savedRatios = localStorage.getItem('list-column-ratios');
+                    if (savedRatios) {
+                        const ratios = JSON.parse(savedRatios);
+                        const minWidths = ['40px', '200px', '70px', '90px', '160px'];
+                        const template = ratios.map((ratio, index) => 
+                            `minmax(${minWidths[index]}, ${ratio}fr)`
+                        ).join(' ');
+                        
+                        // Set CSS custom property on :root so it's available immediately
+                        document.documentElement.style.setProperty('--list-columns', template);
+                    }
+                } catch (error) {
+                    console.warn('[List Columns] Failed to pre-apply widths:', error);
+                }
+                
                 // Log view mode and language for reference (will be handled by Blazor)
                 const savedViewMode = localStorage.getItem('view-mode') || 'grid';
                 const savedLanguage = localStorage.getItem('culture') || 'auto';
@@ -321,11 +348,23 @@
     <script src="js/waterfall.js"></script>
     <!-- String list editor helper for focus management -->
     <script src="js/string-list-editor-helpers.js"></script>
+    <!-- EXIF.js library for extracting EXIF metadata from images (Local) -->
+    <script src="lib/exif-js/exif.js"></script>
+    <!-- Metadata extractor for client-side file analysis -->
+    <script src="js/metadataExtractor.js"></script>
     <!-- Responsive header helper for overflow menu -->
     <script src="js/responsive-header-helper.js"></script>
+    <!-- Long-press handler for touch devices -->
+    <script src="js/long-press-handler.js"></script>
     <script src="js/app.js"></script>
     <!-- IntersectionObserver-based lazy visibility helper -->
     <script src="js/lazy-observer.js"></script>
+    <!-- Video thumbnail generation helper -->
+    <script src="js/video-thumbnail-helper.js"></script>
+    
+    <!-- Remote upload helpers for new upload protocol (cache-busted) -->
+    <script src="js/remote-upload-helpers.js?v=20250927"></script>
+    
     
     <script>
         window.blazorCulture = {
@@ -415,7 +454,7 @@
             const scrollContainer = document.querySelector('.files-content');
             if (!scrollContainer) {
                 // Fallback to regular scrollIntoView if container not found
-                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                element.scrollIntoView({ behavior: 'auto', block: 'nearest' });
                 return true;
             }
 
@@ -462,6 +501,31 @@
         };
           // Theme Management
         window.themeManager = {
+            // Helper function to safely detect dark mode preference
+            detectSystemDarkMode: () => {
+                try {
+                    // Check if matchMedia is available
+                    if (!window.matchMedia) {
+                        console.warn('[THEME] matchMedia not available, defaulting to light mode');
+                        return false;
+                    }
+                    
+                    // Query the media preference
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    
+                    // Some mobile browsers might return null or undefined for matches
+                    if (mediaQuery === null || typeof mediaQuery.matches === 'undefined') {
+                        console.warn('[THEME] matchMedia query returned invalid result, defaulting to light mode');
+                        return false;
+                    }
+                    
+                    return mediaQuery.matches;
+                } catch (error) {
+                    console.error('[THEME] Error detecting system dark mode:', error);
+                    return false;
+                }
+            },
+            
             setTheme: (theme) => {
                 const root = document.documentElement;
                 const body = document.body;
@@ -479,8 +543,8 @@
                     root.setAttribute('data-bs-theme', 'light');
                 } else { // auto
                     body.classList.add('theme-auto');
-                    // Use the native matchMedia to detect system preference
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    // Use the helper function for safer detection
+                    const prefersDark = window.themeManager.detectSystemDarkMode();
                     const themeValue = prefersDark ? 'dark' : 'light';
                     root.setAttribute('data-theme', themeValue);
                     root.setAttribute('data-bs-theme', themeValue);
@@ -493,19 +557,26 @@
                 window.themeManager.setTheme(savedTheme);
                 
                 // Listen for system theme changes when in auto mode
-                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-                const handleThemeChange = (e) => {
-                    const currentTheme = localStorage.getItem('theme') || 'auto';
-                    if (currentTheme === 'auto') {
-                        window.themeManager.setTheme('auto');
+                try {
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    const handleThemeChange = (e) => {
+                        const currentTheme = localStorage.getItem('theme') || 'auto';
+                        if (currentTheme === 'auto') {
+                            window.themeManager.setTheme('auto');
+                        }
+                    };
+                    
+                    // Use the newer addEventListener if available, fallback to addListener
+                    // Some mobile browsers need both methods attempted
+                    if (mediaQuery.addEventListener) {
+                        mediaQuery.addEventListener('change', handleThemeChange);
+                    } else if (mediaQuery.addListener) {
+                        mediaQuery.addListener(handleThemeChange);
+                    } else {
+                        console.warn('[THEME] Unable to listen for system theme changes - browser not supported');
                     }
-                };
-                
-                // Use the newer addEventListener if available, fallback to addListener
-                if (mediaQuery.addEventListener) {
-                    mediaQuery.addEventListener('change', handleThemeChange);
-                } else {
-                    mediaQuery.addListener(handleThemeChange);
+                } catch (error) {
+                    console.error('[THEME] Error setting up theme change listener:', error);
                 }
             }
         };
@@ -713,6 +784,12 @@
                     return false;
                 }
             };
+        };
+        
+        // Helper function for third-party OAuth login
+        window.setThirdPartyOAuthComponent = function(dotNetRef) {
+            window.thirdPartyOAuthComponent = dotNetRef;
+            console.log('[OAuth] Component reference stored');
         };
     </script>
 

@@ -292,10 +292,17 @@ window.oauthHelper = {
         console.log(`[OAuth] checkForOAuthCallback called`);
         console.log(`[OAuth] isOAuthCallbackTab: ${window.isOAuthCallbackTab}`);
         console.log(`[OAuth] oauthCallbackDetected: ${window.oauthCallbackDetected}`);
+        console.log(`[OAuth] isThirdPartyLoginFlow: ${window.isThirdPartyLoginFlow}`);
+        
+        // SKIP if this is a third-party login flow - it will be handled by ThirdPartyOAuthLogin.razor
+        if (window.isThirdPartyLoginFlow) {
+            console.log('[OAuth] Skipping oauth-service.js processing - this is a third-party login flow');
+            return false;
+        }
         
         // Check if we detected OAuth callback during page load
         if (window.isOAuthCallbackTab && window.oauthCallbackDetected && window.oauthCallbackData) {
-            console.log('[OAuth] Processing stored OAuth callback data');
+            console.log('[OAuth] Processing stored OAuth callback data for cloud storage addition');
             
             // Show processing UI immediately
             document.body.innerHTML = `

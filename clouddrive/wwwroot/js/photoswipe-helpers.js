@@ -8,6 +8,9 @@ window.photoSwipeHelpers = {
     _imgSrcsetDescriptor: null,
     _imgPatched: false,
     dotNetRef: null,
+    _isNavigating: false, // Track if we're currently navigating between items
+    _isTransitioning: false, // True only during actual PhotoSwipe slide transitions
+    _slideshowAdvancing: false, // Track if slideshow is auto-advancing (should not stop slideshow)
     // Slideshow state
     slideshowActive: false,
     slideshowTimer: null,
@@ -24,10 +27,43 @@ window.photoSwipeHelpers = {
     _mediaClickGuardHandler: null,
     _slideshowLoadWaitCleanup: null,
     _slideshowToken: 0,
+    _wakeLock: null,
+    
+    // Check if fullscreen API is supported
+    _isFullscreenSupported: function() {
+        try {
+            const doc = document.documentElement;
+            const isSupported = !!(
+                doc.requestFullscreen ||
+                doc.webkitRequestFullscreen ||
+                doc.mozRequestFullScreen ||
+                doc.msRequestFullscreen
+            );
+            
+            // Additional check for iOS - even if API exists, it's very limited
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isIPad = /iPad/.test(navigator.userAgent) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            
+            if (isIOS) {
+                // Only show fullscreen button on iPad (has better support)
+                return isIPad;
+            }
+            
+            if (!isSupported) {
+                console.log('[PhotoSwipe] Fullscreen API not supported - hiding fullscreen button');
+            }
+            
+            return isSupported;
+        } catch (e) {
+            console.warn('[PhotoSwipe] Error checking fullscreen support:', e.message);
+            return false;
+        }
+    },
     
     // Initialize PhotoSwipe gallery
     initGallery: function(dotNetRef, pswpElement, items, options) {
-        console.log('PhotoSwipe initGallery called with', items.length, 'items');
         
         if (typeof PhotoSwipe === 'undefined') {
             console.error('PhotoSwipe library not loaded');
@@ -50,10 +86,10 @@ window.photoSwipeHelpers = {
             index: options.index || 0,
             bgOpacity: 0.85,
             shareEl: false,
-            fullscreenEl: true,
+            fullscreenEl: this._isFullscreenSupported(),
             zoomEl: true,
-            tapToClose: false,
-            clickToCloseNonZoomable: false,
+            tapToClose: true,
+            clickToCloseNonZoomable: true,
             closeOnScroll: false,
             history: false,
             focus: true,
@@ -90,7 +126,26 @@ window.photoSwipeHelpers = {
             }
         });
 
+    // Listen for beforeChange to stop media before transitioning
+    this.currentGallery.listen('beforeChange', function() {
+        // Set navigation state to prevent media autoplay
+        window.photoSwipeHelpers._isNavigating = true;
+        window.photoSwipeHelpers._isTransitioning = true;
+        
+        // Stop all currently playing media when about to change slides
+        window.photoSwipeHelpers.stopAllMedia();
+        
+        // Prevent any autoplay during navigation
+        window.photoSwipeHelpers.preventMediaAutoplay();
+    });
+
     this.currentGallery.listen('afterChange', function() {
+        // Clear navigation/transition state immediately after slide change so media clicks and autoplay aren't blocked
+        window.photoSwipeHelpers._isNavigating = false;
+        window.photoSwipeHelpers._isTransitioning = false;
+        // Clear slideshow advancing flag after navigation completes
+        window.photoSwipeHelpers._slideshowAdvancing = false;
+            
             if (dotNetRef) {
                 const currentItem = this.currItem;
                 if (currentItem && currentItem.videoId && currentItem.subtitleFiles) {
@@ -138,12 +193,15 @@ window.photoSwipeHelpers = {
                 if (window.photoSwipeHelpers._mediaClickGuardEl && window.photoSwipeHelpers._mediaClickGuardHandler) {
                     const prev = window.photoSwipeHelpers._mediaClickGuardEl;
                     const h = window.photoSwipeHelpers._mediaClickGuardHandler;
+                    const preventNav = window.photoSwipeHelpers._mediaClickPreventNav;
+                    try { prev.removeEventListener('click', preventNav, true); } catch(_) {}
                     try { prev.removeEventListener('click', h, true); } catch(_) {}
                     try { prev.removeEventListener('pswpTap', h, true); } catch(_) {}
                     try { prev.removeEventListener('touchend', h, true); } catch(_) {}
                 }
                 window.photoSwipeHelpers._mediaClickGuardEl = null;
                 window.photoSwipeHelpers._mediaClickGuardHandler = null;
+                window.photoSwipeHelpers._mediaClickPreventNav = null;
 
                 const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
                 if (!isFs) {
@@ -156,21 +214,235 @@ window.photoSwipeHelpers = {
                     if (mediaEl) {
                         const ui = this.ui;
                         const handler = (e) => {
-                            // Let media handle the click, but prevent PhotoSwipe UI toggle
-                            try { e.stopPropagation && e.stopPropagation(); } catch(_) {}
-                            try { e.stopImmediatePropagation && e.stopImmediatePropagation(); } catch(_) {}
-                            // If UI is hidden, show it so user can access controls while video plays
+                            const target = e.target;
+                            const tag = target && target.tagName ? target.tagName.toLowerCase() : '';
+                            const isMedia = tag === 'video' || tag === 'audio';
+                            const navigating = window.photoSwipeHelpers && (window.photoSwipeHelpers._isTransitioning === true);
+
+                            // If navigating, guard against UI toggles
+                            if (navigating) {
+                                try { e.stopPropagation && e.stopPropagation(); } catch(_) {}
+                                try { e.stopImmediatePropagation && e.stopImmediatePropagation(); } catch(_) {}
+                                return;
+                            }
+
+                            // Not navigating: allow click to pass to media for play/pause
+                            if (isMedia) {
+                                // Temporarily allow autoplay/prevent-play bypass for this direct user interaction
+                                try {
+                                    target.dataset.cdAllowPlay = '1';
+                                    setTimeout(() => { try { delete target.dataset.cdAllowPlay; } catch(_) {} }, 1200);
+                                    if (target._cdPreventPlayHandler) {
+                                        target.removeEventListener('play', target._cdPreventPlayHandler);
+                                        target.removeEventListener('playing', target._cdPreventPlayHandler);
+                                        delete target._cdPreventPlayHandler;
+                                    }
+                                } catch(_) {}
+                            }
                             try { ui && ui.showControls && ui.showControls(); } catch(_) {}
                         };
+                        
+                        // Add click prevention during navigation
+                        const preventClickDuringNav = (e) => {
+                            if (window.photoSwipeHelpers._isNavigating) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                return false;
+                            }
+                        };
+                        
+                        mediaEl.addEventListener('click', preventClickDuringNav, true);
                         mediaEl.addEventListener('click', handler, true);
                         mediaEl.addEventListener('pswpTap', handler, true);
                         mediaEl.addEventListener('touchend', handler, true);
                         window.photoSwipeHelpers._mediaClickGuardEl = mediaEl;
                         window.photoSwipeHelpers._mediaClickGuardHandler = handler;
+                        window.photoSwipeHelpers._mediaClickPreventNav = preventClickDuringNav;
                     }
                 }
             } catch (e) {}
         });
+
+    // Add beforeClose listener to prevent closing when video is playing
+    this.currentGallery.listen('beforeClose', function() {
+        try {
+            const currentItem = this.currItem;
+            if (!currentItem) return true; // Allow close if no item
+
+            // Check if current item is a video
+            let videoElement = null;
+            if (currentItem.videoId) {
+                videoElement = document.getElementById(currentItem.videoId);
+            }
+            if (!videoElement && currentItem.container) {
+                videoElement = currentItem.container.querySelector('video');
+            }
+
+            if (videoElement) {
+                // For videos: only allow close if video is not playing
+                if (videoElement.paused || videoElement.ended) {
+                    return true; // Allow close
+                } else {
+                    return false; // Prevent close
+                }
+            } else {
+                // For images and other content: always allow close
+                return true; // Allow close
+            }
+        } catch (error) {
+            console.warn('[PhotoSwipe] Error in beforeClose handler:', error.message);
+            return true; // Allow close on error to prevent stuck gallery
+        }
+    });
+
+    // Add direct background click handler for closing when clicking outside video
+    this.currentGallery.listen('initialZoomIn', function() {
+        try {
+            const template = this.template;
+            if (!template) return;
+
+            // Find the background and content areas
+            const background = template.querySelector('.pswp__bg');
+            const scrollWrap = template.querySelector('.pswp__scroll-wrap');
+
+            if (!background || !scrollWrap) return;
+
+            // Track drag state to prevent click-to-close after drag operations
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+            const DRAG_THRESHOLD = 10; // pixels - minimum movement to consider it a drag
+
+            const onPointerDown = (e) => {
+                isDragging = false;
+                // Handle both pointer and touch events
+                if (e.touches && e.touches.length > 0) {
+                    dragStartX = e.touches[0].clientX;
+                    dragStartY = e.touches[0].clientY;
+                } else {
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                }
+            };
+
+            const onPointerMove = (e) => {
+                if (!isDragging) {
+                    let currentX, currentY;
+                    // Handle both pointer and touch events
+                    if (e.touches && e.touches.length > 0) {
+                        currentX = e.touches[0].clientX;
+                        currentY = e.touches[0].clientY;
+                    } else {
+                        currentX = e.clientX;
+                        currentY = e.clientY;
+                    }
+
+                    const deltaX = Math.abs(currentX - dragStartX);
+                    const deltaY = Math.abs(currentY - dragStartY);
+                    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+                        isDragging = true;
+                    }
+                }
+            };
+
+            const onPointerUp = () => {
+                // Reset drag state after a brief delay to ensure click handler sees the correct state
+                setTimeout(() => {
+                    isDragging = false;
+                }, 50);
+            };
+
+            const backgroundClickHandler = (e) => {
+                // Don't close if this was the end of a drag operation
+                if (isDragging) {
+                    return;
+                }
+
+                // Check if click is on background areas or overlay content (outside video)
+                const isOnBackground = e.target === background;
+                const isOnScrollWrap = e.target === scrollWrap;
+                const isOnContainer = e.target.classList && e.target.classList.contains('pswp__container');
+                const isOnItem = e.target.classList && e.target.classList.contains('pswp__item');
+                const isOnOverlayContent = e.target.classList && e.target.classList.contains('overlay-content');
+                const isOnZoomWrap = e.target.classList && e.target.classList.contains('pswp__zoom-wrap');
+
+                // Handle clicks on background areas OR overlay content (which is the area around the video)
+                if (!isOnBackground && !isOnScrollWrap && !isOnContainer && !isOnItem && !isOnOverlayContent && !isOnZoomWrap) {
+                    return;
+                }
+
+                // Additional check: if clicking on overlay-content, make sure we're not clicking directly on the video element
+                if (isOnOverlayContent) {
+                    // Check if the click target is a video/audio element or child of one
+                    const clickedElement = e.target;
+                    const isVideoOrAudio = clickedElement.tagName && (clickedElement.tagName.toLowerCase() === 'video' || clickedElement.tagName.toLowerCase() === 'audio');
+                    const isChildOfVideo = clickedElement.closest && clickedElement.closest('video, audio');
+
+                    if (isVideoOrAudio || isChildOfVideo) {
+                        return;
+                    }
+                }
+
+                try {
+                    const currentItem = this.currItem;
+                    if (!currentItem) return;
+
+                    // Check if current item is a video
+                    let videoElement = null;
+                    if (currentItem.videoId) {
+                        videoElement = document.getElementById(currentItem.videoId);
+                    }
+                    if (!videoElement && currentItem.container) {
+                        videoElement = currentItem.container.querySelector('video');
+                    }
+
+                    if (videoElement) {
+                        // For videos: only close if video is not playing
+                        if (videoElement.paused || videoElement.ended) {
+                            this.close();
+                        }
+                        // If playing, do nothing (don't close)
+                    } else {
+                        // For images and other content: close immediately
+                        this.close();
+                    }
+                } catch (error) {
+                    console.warn('[PhotoSwipe] Error in background click handler:', error.message);
+                }
+            };
+
+            // Add drag tracking listeners to the template
+            template.addEventListener('pointerdown', onPointerDown, { passive: true });
+            template.addEventListener('pointermove', onPointerMove, { passive: true });
+            template.addEventListener('pointerup', onPointerUp, { passive: true });
+            template.addEventListener('pointercancel', onPointerUp, { passive: true });
+
+            // Add touch support for mobile
+            template.addEventListener('touchstart', onPointerDown, { passive: true });
+            template.addEventListener('touchmove', onPointerMove, { passive: true });
+            template.addEventListener('touchend', onPointerUp, { passive: true });
+            template.addEventListener('touchcancel', onPointerUp, { passive: true });
+
+            // Add click listeners to background areas
+            background.addEventListener('click', backgroundClickHandler);
+            scrollWrap.addEventListener('click', backgroundClickHandler);
+
+            // Also add listener to overlay-content elements (this is where clicks outside video actually land)
+            const overlayContents = template.querySelectorAll('.overlay-content');
+            overlayContents.forEach(overlay => {
+                overlay.addEventListener('click', backgroundClickHandler);
+            });
+
+            // Store references for cleanup
+            this._backgroundClickHandler = backgroundClickHandler;
+            this._dragHandlers = { onPointerDown, onPointerMove, onPointerUp };
+            this._backgroundElements = [background, scrollWrap, ...overlayContents];
+
+        } catch (e) {
+            console.warn('[PhotoSwipe] Failed to add background click handler:', e.message);
+        }
+    });
 
         // Prevent PhotoSwipe from hijacking inputs inside custom toolbar controls
         try {
@@ -179,8 +451,10 @@ window.photoSwipeHelpers = {
                 el && el.closest && (
                     el.closest('.pswp__slideshow-controls') ||
                     el.closest('.pswp__slideshow-input') ||
-                    el.closest('.pswp__button--slideshow') ||
-                    el.closest('.pswp__button--fs')
+                    el.closest('.pswp__button') ||        // All PhotoSwipe buttons
+                    el.closest('.pswp__top-bar') ||       // Top bar controls
+                    el.closest('.pswp__caption') ||       // Caption area controls
+                    el.closest('.pswp__counter')          // Counter area
                 )
             );
             if (tmpl) {
@@ -236,8 +510,16 @@ window.photoSwipeHelpers = {
     this.currentGallery.listen('destroy', function() {
             // Clean up referrer patch and other state when gallery is destroyed
             try {
+        // Stop all media playback when gallery is destroyed
+        window.photoSwipeHelpers.stopAllMedia();
+        // Clean up media event listeners
+        window.photoSwipeHelpers.cleanupMediaEventListeners();
+        // Clean up background click handler
+        window.photoSwipeHelpers._removeBackgroundClickHandler();
         // Ensure slideshow is stopped
         window.photoSwipeHelpers._stopSlideshowInternal(true);
+        // Remove global spacebar handler
+        window.photoSwipeHelpers._removeGlobalSpacebarHandler();
                 window.photoSwipeHelpers._removeNoReferrerImagePatch();
                 window.photoSwipeHelpers.loadedVideos.clear();
                 if (window.photoSwipeHelpers.subtitleLoadTimeout) {
@@ -249,6 +531,8 @@ window.photoSwipeHelpers = {
                     if (window.photoSwipeHelpers._mediaClickGuardEl && window.photoSwipeHelpers._mediaClickGuardHandler) {
                         const prev = window.photoSwipeHelpers._mediaClickGuardEl;
                         const h = window.photoSwipeHelpers._mediaClickGuardHandler;
+                        const preventNav = window.photoSwipeHelpers._mediaClickPreventNav;
+                        try { prev.removeEventListener('click', preventNav, true); } catch(_) {}
                         try { prev.removeEventListener('click', h, true); } catch(_) {}
                         try { prev.removeEventListener('pswpTap', h, true); } catch(_) {}
                         try { prev.removeEventListener('touchend', h, true); } catch(_) {}
@@ -256,6 +540,7 @@ window.photoSwipeHelpers = {
                 } catch(_) {}
                 window.photoSwipeHelpers._mediaClickGuardEl = null;
                 window.photoSwipeHelpers._mediaClickGuardHandler = null;
+                window.photoSwipeHelpers._mediaClickPreventNav = null;
                 // Remove control guards
                 try {
                     const g = window.photoSwipeHelpers._controlsGuards;
@@ -270,6 +555,21 @@ window.photoSwipeHelpers = {
                         window.photoSwipeHelpers._controlsGuards = null;
                     }
                 } catch (e2) {}
+                // Clean up gesture handlers
+                try {
+                    const gh = window.photoSwipeHelpers._gestureHandlers;
+                    if (gh && gh.template) {
+                        gh.template.removeEventListener('pointerdown', gh.onPointerStart);
+                        gh.template.removeEventListener('pointermove', gh.onPointerMove);
+                        gh.template.removeEventListener('pointerup', gh.onPointerEnd);
+                        gh.template.removeEventListener('pointercancel', gh.onPointerEnd);
+                        gh.template.removeEventListener('touchstart', gh.onPointerStart);
+                        gh.template.removeEventListener('touchmove', gh.onPointerMove);
+                        gh.template.removeEventListener('touchend', gh.onPointerEnd);
+                        gh.template.removeEventListener('touchcancel', gh.onPointerEnd);
+                        window.photoSwipeHelpers._gestureHandlers = null;
+                    }
+                } catch (e3) {}
             } catch (e) {}
             if (dotNetRef) {
                 dotNetRef.invokeMethodAsync('OnPhotoSwipeDestroyed');
@@ -277,13 +577,97 @@ window.photoSwipeHelpers = {
         });
 
     // Open the gallery
-        console.log('Opening PhotoSwipe gallery...');
         this.currentGallery.init();
-        console.log('PhotoSwipe gallery initialized and opened');
-        
+
         // Initialize wheel navigation
         if (typeof enablePhotoSwipeWheelNavigation !== 'undefined') {
             enablePhotoSwipeWheelNavigation(this.currentGallery);
+        }
+
+        // Add global spacebar handler for slideshow toggle (always active when PhotoSwipe is open)
+        this._installGlobalSpacebarHandler();
+        
+        // Add gesture listeners to detect navigation attempts
+        try {
+            const template = this.currentGallery.template;
+            if (template) {
+                // Listen for mouse/touch events that might trigger navigation
+                const onPointerStart = (e) => {
+                    // Start drag tracking
+                    this._dragStartTime = Date.now();
+                    try {
+                        const pt = (e.touches && e.touches[0]) || e;
+                        this._dragStartX = pt.clientX;
+                        this._dragStartY = pt.clientY;
+                    } catch(_) { this._dragStartX = this._dragStartY = undefined; }
+                    this._dragMoved = false;
+                    // Avoid slideshow auto-advance racing with user navigation
+                    try { if (this.slideshowActive) { this._clearSlideshowTimer(); this._slideshowAdvancing = false; this._slideshowPausedForUserNav = true; } } catch(_) {}
+                };
+                
+                const onPointerMove = (e) => {
+                    // Only treat as navigation when actual movement exceeds threshold
+                    let moved = false;
+                    try {
+                        const pt = (e.touches && e.touches[0]) || e;
+                        if (typeof this._dragStartX === 'number' && typeof this._dragStartY === 'number') {
+                            const dx = Math.abs(pt.clientX - this._dragStartX);
+                            const dy = Math.abs(pt.clientY - this._dragStartY);
+                            moved = (dx > 6 || dy > 6);
+                        }
+                    } catch(_) {}
+                    if (!this._dragMoved && moved) {
+                        this._dragMoved = true;
+                        this._isNavigating = true;
+                        // Do not pause media or install autoplay prevention on pointer move; beforeChange handles media stopping safely
+                    }
+                };
+                
+                const onPointerEnd = (e) => {
+                    // If there was a drag movement, suppress the immediate next click so it doesn't stop slideshow
+                    if (this._dragMoved) {
+                        this._suppressClickUntil = Date.now() + 300; // 300ms window to ignore click
+                    }
+                    // Clear drag state
+                    this._dragStartTime = null;
+                    this._dragMoved = false;
+                    // If there was no drag movement, ensure navigating is cleared so clicks aren't blocked
+                    if (!this._dragMoved) {
+                        this._isNavigating = false;
+                    }
+                    // If slideshow was paused due to user nav, reschedule next advance after brief settle
+                    if (this.slideshowActive && this._slideshowPausedForUserNav) {
+                        setTimeout(() => {
+                            try { if (this.slideshowActive) this._scheduleNextAdvance(); } catch(_) {}
+                            this._slideshowPausedForUserNav = false;
+                        }, 350);
+                    }
+                    // Don't immediately clear _isNavigating here, let afterChange handle it
+                    // However, in case no slide change occurs (edge swipe), ensure we reset navigating state
+                    setTimeout(() => { this._isNavigating = false; }, 400);
+                };
+                
+                template.addEventListener('pointerdown', onPointerStart, { passive: true });
+                template.addEventListener('pointermove', onPointerMove, { passive: true });
+                template.addEventListener('pointerup', onPointerEnd, { passive: true });
+                template.addEventListener('pointercancel', onPointerEnd, { passive: true });
+                
+                // Also handle touch events for better mobile support
+                template.addEventListener('touchstart', onPointerStart, { passive: true });
+                template.addEventListener('touchmove', onPointerMove, { passive: true });
+                template.addEventListener('touchend', onPointerEnd, { passive: true });
+                template.addEventListener('touchcancel', onPointerEnd, { passive: true });
+                
+                // Store references for cleanup
+                this._gestureHandlers = {
+                    template,
+                    onPointerStart,
+                    onPointerMove,
+                    onPointerEnd
+                };
+            }
+        } catch (e) {
+            console.warn('[PhotoSwipe] Failed to add gesture listeners:', e);
         }
         
         // Store globally for compatibility
@@ -339,8 +723,26 @@ window.photoSwipeHelpers = {
                     if (mediaEl) {
                         const ui = g.ui;
                         const handler = (e) => {
-                            try { e.stopPropagation && e.stopPropagation(); } catch(_) {}
-                            try { e.stopImmediatePropagation && e.stopImmediatePropagation(); } catch(_) {}
+                            const target = e.target;
+                            const tag = target && target.tagName ? target.tagName.toLowerCase() : '';
+                            const isMedia = tag === 'video' || tag === 'audio';
+                            const navigating = window.photoSwipeHelpers && (window.photoSwipeHelpers._isTransitioning === true);
+                            if (navigating) {
+                                try { e.stopPropagation && e.stopPropagation(); } catch(_) {}
+                                try { e.stopImmediatePropagation && e.stopImmediatePropagation(); } catch(_) {}
+                                return;
+                            }
+                            if (isMedia) {
+                                try {
+                                    target.dataset.cdAllowPlay = '1';
+                                    setTimeout(() => { try { delete target.dataset.cdAllowPlay; } catch(_) {} }, 1200);
+                                    if (target._cdPreventPlayHandler) {
+                                        target.removeEventListener('play', target._cdPreventPlayHandler);
+                                        target.removeEventListener('playing', target._cdPreventPlayHandler);
+                                        delete target._cdPreventPlayHandler;
+                                    }
+                                } catch(_) {}
+                            }
                             try { ui && ui.showControls && ui.showControls(); } catch(_) {}
                         };
                         // Cleanup previous
@@ -468,10 +870,14 @@ window.photoSwipeHelpers = {
                     try { gallery.updateSize(true); } catch(_) {}
                     // Reduced timeout for faster response in fullscreen
                     setTimeout(() => { try { gallery.updateSize(true); } catch(_) {} }, 50);
+                    // Request wake lock and maximize brightness when entering fullscreen
+                    try { self._requestWakeLock(); } catch(_) {}
                 } else {
                     tmpl.classList.remove('cd-immersive');
             // Restore control visibility state on exit
             try { if (gallery.ui && gallery.ui.showControls) gallery.ui.showControls(); } catch(_) {}
+                    // Clear any pending auto-hide timer when exiting fullscreen
+                    try { if (uiHideTimer && uiHideTimer.current) { clearTimeout(uiHideTimer.current); uiHideTimer.current = null; } } catch(_) {}
                     // Restore option overrides
                     try {
                         if (!gallery.options) gallery.options = {};
@@ -479,6 +885,8 @@ window.photoSwipeHelpers = {
                         if (typeof self._prevFitControlsInViewport !== 'undefined') { gallery.options.fitControlsInViewport = self._prevFitControlsInViewport; self._prevFitControlsInViewport = undefined; }
                         gallery.updateSize(true);
                     } catch(_) {}
+                    // Release wake lock and restore brightness when exiting fullscreen
+                    try { self._releaseWakeLock(); } catch(_) {}
                 }
             } catch (_) {}
         };
@@ -501,44 +909,122 @@ window.photoSwipeHelpers = {
         // On window resize during fullscreen, just refresh layout
         const onWindowResize = () => { try { gallery.updateSize(true); } catch(_) {} };
         window.addEventListener('resize', onWindowResize);
-        // Input behavior by device type
-        const isTouch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+        // Input behavior by device type - use improved mobile detection
+        const isTouch = window.mobileDetection ? window.mobileDetection.isMobile() : 
+                        (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
         let clickToggle = null;
         let mouseMoveHandler = null;
-    if (isTouch) {
+        let mouseEnterHandler = null;
+        // Store timer reference on self so it persists across closures and can be properly cleaned up
+        let uiHideTimer = { current: null };
+        
+        if (isTouch) {
             // Mobile/tablet: rely on PhotoSwipe's built-in tap-to-toggle controls
             // No extra handlers needed; we only changed default state on entering fullscreen via ui.hideControls()
         } else {
-            // Desktop: show UI when mouse near top/bottom edge; hide otherwise
-            const showUI = () => { try { if (gallery.ui && gallery.ui.showControls) gallery.ui.showControls(); } catch (_) {} };
-            const hideUI = () => { try { if (gallery.ui && gallery.ui.hideControls) gallery.ui.hideControls(); } catch (_) {} };
+            // Desktop: show UI on any mouse move or click, auto-hide after 3 seconds idle
+            const showUI = () => { 
+                try {
+                    // Force controls to show by directly manipulating the UI classes and calling showControls
+                    if (gallery.ui) {
+                        // Reset PhotoSwipe's internal idle state
+                        if (gallery.ui._isIdle !== undefined) {
+                            gallery.ui._isIdle = false;
+                        }
+                        
+                        // Call showControls
+                        if (gallery.ui.showControls) {
+                            gallery.ui.showControls();
+                        }
+                        
+                        // Also directly remove the hidden class from UI elements as a backup
+                        try {
+                            const uiElement = gallery.template.querySelector('.pswp__ui');
+                            if (uiElement) {
+                                uiElement.classList.remove('pswp__ui--hidden');
+                                uiElement.classList.remove('pswp__ui--idle');
+                                
+                                // Force visibility of child elements (top-bar and caption)
+                                const topBar = gallery.template.querySelector('.pswp__top-bar');
+                                const caption = gallery.template.querySelector('.pswp__caption');
+                                
+                                if (topBar) {
+                                    topBar.style.opacity = '1';
+                                    topBar.style.transform = 'none';
+                                }
+                                
+                                if (caption) {
+                                    caption.style.opacity = '1';
+                                    caption.style.transform = 'none';
+                                }
+                            }
+                        } catch (e) {}
+                    }
+                    
+                    // Clear existing hide timer
+                    if (uiHideTimer.current) {
+                        clearTimeout(uiHideTimer.current);
+                        uiHideTimer.current = null;
+                    }
+                    // Set new hide timer for 3 seconds
+                    uiHideTimer.current = setTimeout(() => {
+                        try { 
+                            if (gallery.ui && gallery.ui.hideControls) {
+                                gallery.ui.hideControls();
+                            }
+                        } catch (_) {}
+                    }, 3000);
+                } catch (e) {}
+            };
             const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-            const EDGE_PX = 80; // sensitivity band at edges
+            
+            // Show UI on any mouse movement in fullscreen
             mouseMoveHandler = (e) => {
                 if (!isFullscreen()) return;
                 // Don't toggle UI while a drag/selection is in progress
                 if ((typeof e.buttons === 'number' && e.buttons !== 0)) return;
-                try {
-                    const rect = tmpl.getBoundingClientRect();
-                    const y = e.clientY - rect.top;
-                    if (y <= EDGE_PX || y >= rect.height - EDGE_PX) {
-                        showUI();
-                    } else {
-                        // Only hide if not hovering toolbar/caption
-                        const t = e.target;
-                        if (!(t && t.closest && (t.closest('.pswp__top-bar') || t.closest('.pswp__caption')))) {
-                            hideUI();
-                        }
-                    }
-                } catch (_) {}
+                showUI();
             };
             tmpl.addEventListener('mousemove', mouseMoveHandler, { capture: false, passive: true });
+            
+            // Show UI when mouse enters the viewer area (e.g., returning from outside browser window)
+            mouseEnterHandler = (e) => {
+                if (!isFullscreen()) return;
+                showUI();
+            };
+            tmpl.addEventListener('mouseenter', mouseEnterHandler, { capture: false, passive: true });
+            
+            // Show UI on click in fullscreen
+            clickToggle = (e) => {
+                if (!isFullscreen()) return;
+                showUI();
+            };
+            tmpl.addEventListener('click', clickToggle, { capture: false, passive: true });
             // Keep UI visible while hovering overlays themselves
             const topBar = tmpl.querySelector('.pswp__top-bar');
             const caption = tmpl.querySelector('.pswp__caption');
             if (topBar) {
-                const onTopEnter = () => { if (isFullscreen()) showUI(); };
-                const onTopLeave = () => { if (isFullscreen()) hideUI(); };
+                const onTopEnter = () => { 
+                    if (isFullscreen()) {
+                        // Clear any pending hide timer when entering toolbar area
+                        if (uiHideTimer.current) {
+                            clearTimeout(uiHideTimer.current);
+                            uiHideTimer.current = null;
+                        }
+                        showUI(); 
+                    }
+                };
+                const onTopLeave = () => { 
+                    if (isFullscreen()) {
+                        // Start auto-hide timer when leaving toolbar area
+                        if (uiHideTimer.current) {
+                            clearTimeout(uiHideTimer.current);
+                        }
+                        uiHideTimer.current = setTimeout(() => {
+                            try { if (gallery.ui && gallery.ui.hideControls) gallery.ui.hideControls(); } catch (_) {}
+                        }, 3000);
+                    }
+                };
                 topBar.addEventListener('mouseenter', onTopEnter);
                 topBar.addEventListener('mouseleave', onTopLeave);
                 // Track for cleanup
@@ -548,8 +1034,27 @@ window.photoSwipeHelpers = {
                 self._fullscreenChangeHandlers.topBarLeave = onTopLeave;
             }
             if (caption) {
-                const onCapEnter = () => { if (isFullscreen()) showUI(); };
-                const onCapLeave = () => { if (isFullscreen()) hideUI(); };
+                const onCapEnter = () => { 
+                    if (isFullscreen()) {
+                        // Clear any pending hide timer when entering caption area
+                        if (uiHideTimer.current) {
+                            clearTimeout(uiHideTimer.current);
+                            uiHideTimer.current = null;
+                        }
+                        showUI(); 
+                    }
+                };
+                const onCapLeave = () => { 
+                    if (isFullscreen()) {
+                        // Start auto-hide timer when leaving caption area
+                        if (uiHideTimer.current) {
+                            clearTimeout(uiHideTimer.current);
+                        }
+                        uiHideTimer.current = setTimeout(() => {
+                            try { if (gallery.ui && gallery.ui.hideControls) gallery.ui.hideControls(); } catch (_) {}
+                        }, 3000);
+                    }
+                };
                 caption.addEventListener('mouseenter', onCapEnter);
                 caption.addEventListener('mouseleave', onCapLeave);
                 // Track for cleanup
@@ -561,7 +1066,7 @@ window.photoSwipeHelpers = {
         }
 
     // Track handlers for cleanup
-    this._fullscreenChangeHandlers = { onFsChange, onWebkitFsChange, onMozFsChange, onMsFsChange, onAfterChange, onWindowResize, clickToggle, mouseMoveHandler };
+    this._fullscreenChangeHandlers = { onFsChange, onWebkitFsChange, onMozFsChange, onMsFsChange, onAfterChange, onWindowResize, clickToggle, mouseMoveHandler, mouseEnterHandler, uiHideTimer };
 
     // Clean up on destroy
         try {
@@ -577,8 +1082,12 @@ window.photoSwipeHelpers = {
                         try { gallery.unlisten('doubleTap', h.onDoubleTap); } catch (_) {}
                         try { gallery.unlisten('zoomAnimationEnded', h.onZoomEnd); } catch (_) {}
                         try { window.removeEventListener('resize', h.onWindowResize); } catch(_) {}
-            // No custom touch toggles to remove anymore
+                        // Remove UI auto-hide timer
+                        try { if (h.uiHideTimer && h.uiHideTimer.current) { clearTimeout(h.uiHideTimer.current); h.uiHideTimer.current = null; } } catch (_) {}
+                        // Remove mouse and click handlers
                         try { if (h.mouseMoveHandler) tmpl.removeEventListener('mousemove', h.mouseMoveHandler, false); } catch (_) {}
+                        try { if (h.mouseEnterHandler) tmpl.removeEventListener('mouseenter', h.mouseEnterHandler, false); } catch (_) {}
+                        try { if (h.clickToggle) tmpl.removeEventListener('click', h.clickToggle, false); } catch (_) {}
                         // Remove overlay hover handlers if present
                         try {
                             if (h.topBarEl) {
@@ -595,11 +1104,82 @@ window.photoSwipeHelpers = {
                 } catch (_) {}
                 try { tmpl.classList.remove('cd-immersive'); } catch (_) {}
                 try { if (window.photoSwipeHelpers._immersiveUiHideTimer) { clearTimeout(window.photoSwipeHelpers._immersiveUiHideTimer); window.photoSwipeHelpers._immersiveUiHideTimer = null; } } catch(_) {}
+                // Release wake lock and restore brightness on destroy
+                try { window.photoSwipeHelpers._releaseWakeLock(); } catch(_) {}
             });
         } catch (_) {}
 
         // Initialize state
         applyState();
+    },
+
+    // Request wake lock to keep screen on - system brightness control not available via web APIs
+    _requestWakeLock: async function() {
+        let wakeLockSuccess = false;
+        
+        try {
+            // Request screen wake lock to prevent screen from dimming/turning off
+            if ('wakeLock' in navigator) {
+                this._wakeLock = await navigator.wakeLock.request('screen');
+                wakeLockSuccess = true;
+                
+                // Listen for wake lock release (e.g., when tab becomes hidden)
+                this._wakeLock.addEventListener('release', () => {
+                    this._wakeLock = null;
+                });
+            } else {
+                console.log('[PhotoSwipe] ❌ Wake Lock API not supported in this browser');
+            }
+        } catch (err) {
+            console.warn('[PhotoSwipe] ❌ Failed to acquire wake lock:', err.message);
+        }
+
+        // Check if we're in a PWA or installed app context where more control might be available
+        try {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('[PhotoSwipe] 📱 Running in PWA mode - some devices may offer additional brightness control');
+            }
+        } catch (err) {
+            // Ignore display-mode query errors
+        }
+
+        // Inform about platform-specific brightness control
+        try {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isIPad = /iPad/.test(navigator.userAgent) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                          
+            if (userAgent.includes('android')) {
+                console.log('[PhotoSwipe] 🤖 Android: Use device brightness controls or notification panel');
+            } else if (isIOS) {
+                if (isIPad) {
+                    console.log('[PhotoSwipe] 📱 iPad: Swipe down from top-right corner or use Control Center to adjust brightness');
+                } else {
+                    console.log('[PhotoSwipe] 🍎 iPhone: Swipe down from top-right corner or use Control Center to adjust brightness');
+                }
+            } else if (userAgent.includes('mac') || navigator.platform.includes('Mac')) {
+                console.log('[PhotoSwipe] 🖥️ macOS: Use brightness keys (F1/F2) or System Preferences');
+            } else if (userAgent.includes('windows')) {
+                console.log('[PhotoSwipe] 🪟 Windows: Use brightness keys or Action Center');
+            }
+        } catch (err) {
+            // Ignore user agent detection errors
+        }
+    },
+
+    // Release wake lock 
+    _releaseWakeLock: async function() {
+        try {
+            // Release screen wake lock
+            if (this._wakeLock) {
+                await this._wakeLock.release();
+                this._wakeLock = null;
+            }
+        } catch (err) {
+            console.warn('[PhotoSwipe] Failed to release wake lock:', err.message);
+        }
     },
 
     _fitScaleForCurrent: function() {
@@ -667,10 +1247,59 @@ window.photoSwipeHelpers = {
         if (!gallery || !gallery.template) return;
         const ui = gallery.template.querySelector('.pswp__top-bar');
         if (!ui) return;
-        // Avoid duplicating button
-        if (ui.querySelector('.pswp__button--slideshow')) return;
 
-        // Create button
+        // If a slideshow button already exists (from Blazor markup), wire it up and keep icons in sync
+        const existingBtn = ui.querySelector('.pswp__button--slideshow');
+        if (existingBtn) {
+            const btn = existingBtn;
+            const updateTitleAndIcon = () => {
+                const startTitle = 'Start slideshow';
+                const stopTitle = 'Stop slideshow';
+                btn.title = this.slideshowActive ? stopTitle : startTitle;
+                btn.setAttribute('aria-label', this.slideshowActive ? stopTitle : startTitle);
+                // Prefer toggling Font Awesome <i> if present
+                const iEl = btn.querySelector('i');
+                if (iEl) {
+                    // Support both 'fa' and 'fas' prefixes
+                    try { iEl.classList.remove('fa-play'); iEl.classList.remove('fa-pause'); } catch(_) {}
+                    try { iEl.classList.remove('fas'); iEl.classList.add('fa'); } catch(_) {}
+                    iEl.classList.add(this.slideshowActive ? 'fa-pause' : 'fa-play');
+                } else {
+                    // Fallback to SVG swap if an <svg> exists
+                    const icon = btn.querySelector('svg');
+                    if (icon) {
+                        while (icon.firstChild) icon.removeChild(icon.firstChild);
+                        if (this.slideshowActive) {
+                            const pathPause1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            pathPause1.setAttribute('x', '6'); pathPause1.setAttribute('y', '5'); pathPause1.setAttribute('width', '4'); pathPause1.setAttribute('height', '14');
+                            const pathPause2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            pathPause2.setAttribute('x', '14'); pathPause2.setAttribute('y', '5'); pathPause2.setAttribute('width', '4'); pathPause2.setAttribute('height', '14');
+                            icon.appendChild(pathPause1); icon.appendChild(pathPause2);
+                        } else {
+                            const pathPlay = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            pathPlay.setAttribute('d', 'M8 5v14l11-7z');
+                            icon.appendChild(pathPlay);
+                        }
+                    }
+                }
+            };
+
+            // Wrap start/stop so any trigger updates the icon
+            const originalStop = this.stopSlideshow.bind(this);
+            const originalStart = this.startSlideshow.bind(this);
+            this.stopSlideshow = () => { originalStop(); updateTitleAndIcon(); };
+            this.startSlideshow = (seconds) => { originalStart(seconds); updateTitleAndIcon(); };
+
+            // Expose updater and refresh on slide change
+            this._updateSlideshowButtonIcon = updateTitleAndIcon;
+            try { gallery.listen('afterChange', updateTitleAndIcon); } catch (_) {}
+
+            // Initial sync
+            updateTitleAndIcon();
+            return; // We're done; don't create a duplicate button
+        }
+
+        // Create button when not provided by Blazor markup
     const btn = document.createElement('button');
     btn.className = 'pswp__button pswp__button--action pswp__button--slideshow';
     btn.setAttribute('type', 'button');
@@ -805,12 +1434,23 @@ window.photoSwipeHelpers = {
     // Append to toolbar; absolute "right" handles final placement robustly
     ui.appendChild(btn);
 
-        // Keep icon in sync when slideshow stops due to reaching last item or user interaction
+    // Keep icon in sync when slideshow state changes
         const originalStop = this.stopSlideshow.bind(this);
+        const originalStart = this.startSlideshow.bind(this);
+
         this.stopSlideshow = () => {
             originalStop();
             updateTitleAndIcon();
         };
+
+        this.startSlideshow = (seconds) => {
+            originalStart(seconds);
+            updateTitleAndIcon();
+        };
+
+    // Store the update function globally so other handlers can call it
+        this._updateSlideshowButtonIcon = updateTitleAndIcon;
+
         // Also update on slide change in case state toggled elsewhere
         try {
             gallery.listen('afterChange', updateTitleAndIcon);
@@ -820,6 +1460,12 @@ window.photoSwipeHelpers = {
     // Destroy current gallery
     destroyGallery: function() {
         if (this.currentGallery) {
+            // Stop all media before destroying
+            this.stopAllMedia();
+            // Clean up media event listeners
+            this.cleanupMediaEventListeners();
+            // Reset navigation state
+            this._isNavigating = false;
                     // Also stop bubbling from actual UI buttons/controls in fullscreen (bubble-phase)
                     const buttonGuardHandler = (e) => {
                         if (!isFullscreen()) return;
@@ -864,6 +1510,8 @@ window.photoSwipeHelpers = {
             this.currentGallery = null;
             window.pswp = null;
         }
+        // Release wake lock and restore brightness
+        try { this._releaseWakeLock(); } catch(_) {}
         // Clear loaded videos set
         this.loadedVideos.clear();
         // Clear any pending subtitle loading
@@ -878,6 +1526,14 @@ window.photoSwipeHelpers = {
     // Navigate to previous item
     prev: function() {
         if (this.currentGallery) {
+            // Set navigation state and stop media before navigation
+            this._isNavigating = true;
+            // Prevent slideshow timer from firing mid-transition
+            this._clearSlideshowTimer();
+            this.stopAllMedia();
+            // Extra: pause any stray media elements
+            try { const t = this.currentGallery.template; t && t.querySelectorAll && t.querySelectorAll('video,audio').forEach(m=>{ try{ m.pause && m.pause(); }catch(_){} }); } catch(_) {}
+            this.preventMediaAutoplay();
             this.currentGallery.prev();
         }
     },
@@ -885,6 +1541,12 @@ window.photoSwipeHelpers = {
     // Navigate to next item
     next: function() {
         if (this.currentGallery) {
+            // Set navigation state and stop media before navigation
+            this._isNavigating = true;
+            this._clearSlideshowTimer();
+            this.stopAllMedia();
+            try { const t = this.currentGallery.template; t && t.querySelectorAll && t.querySelectorAll('video,audio').forEach(m=>{ try{ m.pause && m.pause(); }catch(_){} }); } catch(_) {}
+            this.preventMediaAutoplay();
             this.currentGallery.next();
         }
     },
@@ -892,6 +1554,12 @@ window.photoSwipeHelpers = {
     // Go to specific index
     goTo: function(index) {
         if (this.currentGallery) {
+            // Set navigation state and stop media before navigation
+            this._isNavigating = true;
+            this._clearSlideshowTimer();
+            this.stopAllMedia();
+            try { const t = this.currentGallery.template; t && t.querySelectorAll && t.querySelectorAll('video,audio').forEach(m=>{ try{ m.pause && m.pause(); }catch(_){} }); } catch(_) {}
+            this.preventMediaAutoplay();
             this.currentGallery.goTo(index);
         }
     },
@@ -909,7 +1577,6 @@ window.photoSwipeHelpers = {
                 const imgElements = container.querySelectorAll('.pswp__img');
                 
                 imgElements.forEach(imgElement => {
-                    console.log('Updating image src from', imgElement.src, 'to', item.src);
                     try {
                         imgElement.referrerPolicy = 'no-referrer';
                         imgElement.setAttribute('referrerpolicy', 'no-referrer');
@@ -1029,8 +1696,6 @@ window.photoSwipeHelpers = {
                                 targetZoom = zoomToFit;
                             }
                             
-                            console.log('Fitting image:', imageWidth + 'x' + imageHeight, 'to viewport:', viewportWidth + 'x' + viewportHeight, 'with zoom:', targetZoom, 'initial:', initialZoomLevel);
-                            
                             const centerX = viewportWidth / 2;
                             const centerY = viewportHeight / 2;
                             this.currentGallery.zoomTo(targetZoom, {x: centerX, y: centerY}, 333);
@@ -1063,7 +1728,6 @@ window.photoSwipeHelpers = {
         this.slideshowActive = true;
         this._installUserStopHandlers();
         this._scheduleNextAdvance();
-        console.log('[PhotoSwipe] Slideshow started with', seconds, 'seconds');
 
         // On slideshow start (user gesture), try to prime current media for autoplay on iOS
         try {
@@ -1074,6 +1738,14 @@ window.photoSwipeHelpers = {
                 if (currentItem.videoId) mediaEl = document.getElementById(currentItem.videoId);
                 if (!mediaEl) mediaEl = container.querySelector('video, audio');
                 if (mediaEl) {
+                    // Remove any navigation prevent handlers for current media
+                    try {
+                        if (mediaEl._cdPreventPlayHandler) {
+                            mediaEl.removeEventListener('play', mediaEl._cdPreventPlayHandler);
+                            mediaEl.removeEventListener('playing', mediaEl._cdPreventPlayHandler);
+                            delete mediaEl._cdPreventPlayHandler;
+                        }
+                    } catch(_) {}
                     this._prepareAndPlayMediaForSlideshow(mediaEl);
                 }
             }
@@ -1104,7 +1776,6 @@ window.photoSwipeHelpers = {
         if (!silent && this.dotNetRef) {
             try { this.dotNetRef.invokeMethodAsync('OnSlideshowStopped'); } catch (e) {}
         }
-        console.log('[PhotoSwipe] Slideshow stopped');
     },
 
     _clearSlideshowTimer: function() {
@@ -1226,13 +1897,24 @@ window.photoSwipeHelpers = {
 
             if (mediaEl) {
                 this._currentMediaEl = mediaEl;
+                // Pause any other media elements currently playing in the gallery to ensure only one plays at a time
+                try {
+                    const all = this.currentGallery && this.currentGallery.template ? this.currentGallery.template.querySelectorAll('video, audio') : [];
+                    all && all.forEach && all.forEach(el => { if (el !== mediaEl) { try { el.pause && el.pause(); } catch(_) {} } });
+                } catch(_) {}
                 const handler = () => {
                     if (!this.slideshowActive) return;
                     // If user used the player's own fullscreen, exit it first to avoid frozen last frame overlay
                     const wasFs = this._isElementInNativeFullscreen(mediaEl);
                     if (wasFs) {
                         let exited = false;
-                        const proceed = () => { if (this.slideshowActive) this.next(); };
+                        const proceed = () => { 
+                            if (this.slideshowActive) {
+                                // Stop any playing media before advancing
+                                window.photoSwipeHelpers.stopAllMedia();
+                                this.next(); 
+                            }
+                        };
                         const onFsChange = () => {
                             exited = true;
                             try {
@@ -1267,13 +1949,23 @@ window.photoSwipeHelpers = {
                         }, 400);
                         return;
                     }
+                    // Stop any playing media before advancing
+                    window.photoSwipeHelpers.stopAllMedia();
                     this.next();
                 };
                 this._currentMediaEndedHandler = handler;
                 try { mediaEl.removeEventListener('ended', handler); } catch (e) {}
                 mediaEl.addEventListener('ended', handler, { once: true });
-        // Prepare element for iOS autoplay and try to play
-        this._prepareAndPlayMediaForSlideshow(mediaEl);
+                // Avoid any stale preventPlay handlers that could pause autoplay on slideshow
+                try {
+                    if (mediaEl._cdPreventPlayHandler) {
+                        mediaEl.removeEventListener('play', mediaEl._cdPreventPlayHandler);
+                        mediaEl.removeEventListener('playing', mediaEl._cdPreventPlayHandler);
+                        delete mediaEl._cdPreventPlayHandler;
+                    }
+                } catch(_) {}
+                // Prepare element for iOS autoplay and try to play
+                this._prepareAndPlayMediaForSlideshow(mediaEl);
                 return; // Do not set timeout; advance when media ends
             }
         }
@@ -1290,6 +1982,8 @@ window.photoSwipeHelpers = {
 
         const advanceAfterDelay = () => {
             if (!this.slideshowActive || !this.currentGallery || token !== this._slideshowToken) return;
+            // Do not advance while user is navigating (e.g., mid-drag)
+            if (this._isNavigating) { this._scheduleImageAdvanceAfterRendered(); return; }
             this.slideshowTimer = setTimeout(() => {
                 if (!this.slideshowActive || !this.currentGallery || token !== this._slideshowToken) return;
                 const g2 = this.currentGallery;
@@ -1300,19 +1994,29 @@ window.photoSwipeHelpers = {
                         const v = localStorage.getItem('cd.slideshowLoop');
                         loop = (v === '1' || v === 'true');
                     } catch (e) {}
-                    if (loop) { g2.goTo(0); } else { this.stopSlideshow(); }
+                    if (loop) {
+                        // Set slideshow advancing flag before navigation
+                        this._slideshowAdvancing = true;
+                        g2.goTo(0);
+                    } else {
+                        this.stopSlideshow();
+                    }
                 } else {
+                    // Stop any playing media before advancing in slideshow
+                    window.photoSwipeHelpers.stopAllMedia();
+                    // Set slideshow advancing flag before navigation
+                    this._slideshowAdvancing = true;
                     this.next();
                 }
             }, this.slideshowSeconds * 1000);
         };
 
-        const item = g.currItem;
+    const item = g.currItem;
     const readyNow = () => {
             try {
                 if (!item) return false;
         if (item.loadComplete === true || item.loaded === true) return true; // PhotoSwipe marks when image is loaded
-                const img = item.container && item.container.querySelector && item.container.querySelector('.pswp__img');
+        const img = item.container && item.container.querySelector && item.container.querySelector('.pswp__img');
                 return !!(img && img.complete && img.naturalWidth > 0);
             } catch (_) { return false; }
         };
@@ -1355,7 +2059,7 @@ window.photoSwipeHelpers = {
             if (!this.slideshowActive || token !== this._slideshowToken) { cleanup(); return; }
             cleanup();
             advanceAfterDelay();
-        }, 4000);
+        }, 6000);
         this._slideshowLoadWaitCleanup = cleanup;
     },
 
@@ -1366,35 +2070,76 @@ window.photoSwipeHelpers = {
             el && el.closest && (
                 el.closest('.pswp__slideshow-controls') ||
                 el.closest('.pswp__slideshow-input') ||
-                el.closest('.pswp__button--fs') ||
-                el.closest('.pswp__button--slideshow')
+                el.closest('.pswp__button') ||        // All PhotoSwipe buttons (next, prev, close, zoom, etc.)
+                el.closest('.pswp__top-bar') ||       // Top bar controls
+                el.closest('.pswp__caption') ||       // Caption area controls
+                el.closest('.pswp__counter')          // Counter area
             )
         );
         const stop = (e) => {
             const t = e && (e.target || document.activeElement);
             if (isInControls(t)) return;
-            // Click anywhere outside controls stops slideshow (including on picture)
-            if (e && e.type === 'click') { this.stopSlideshow(); return; }
-            // Stop on wheel/touchpad scrolls
-            if (e && e.type === 'wheel') { this.stopSlideshow(); return; }
-            // Stop on drag gestures: mouse drag (buttons != 0) or touch moves
+
+            // Don't stop slideshow during programmatic navigation (slideshow auto-advance)
+            if (this._slideshowAdvancing) return;
+
+            // More selective about what stops slideshow:
+            // NOTE: Wheel events are NOT included - they should continue slideshow like other navigation
+
+            // 2. Handle specific key presses
+            if (e && e.type === 'keydown') {
+                // Navigation keys should NOT stop slideshow - they just navigate and continue
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                    e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+                    e.key === 'PageUp' || e.key === 'PageDown') {
+                    return; // Don't stop slideshow
+                }
+                // Enter and Space can be navigation in PhotoSwipe, don't stop
+                // Note: Spacebar is handled by global handler for slideshow toggle
+                if (e.key === 'Enter' || e.key === ' ') {
+                    return;
+                }
+                // ESC and other keys should stop slideshow
+                this.stopSlideshow();
+                return;
+            }
+
+            // 3. Click on media/background should stop slideshow only if it's not a navigation click
+            if (e && (e.type === 'click' || e.type === 'touchend' || e.type === 'pointerup' || e.type === 'mouseup')) {
+                // If click is during navigation transition, or immediately after a drag/swipe, don't stop slideshow
+                if (this._isNavigating) return;
+                if (this._suppressClickUntil && Date.now() < this._suppressClickUntil) return;
+                this.stopSlideshow();
+                return;
+            }
+
+            // 4. Pointer move: don't stop slideshow for swipe navigation.
+            // Only stop if it's clearly a pan on a zoomed-in item (zoom level > fit).
             if (e && e.type === 'pointermove') {
-                if ((typeof e.buttons === 'number' && e.buttons !== 0) || e.pointerType === 'touch') {
-                    this.stopSlideshow();
+                // Only consider mouse drags (not touch) with button pressed
+                if (typeof e.buttons === 'number' && e.buttons !== 0 && e.pointerType !== 'touch') {
+                    try {
+                        const g = this.currentGallery;
+                        const fit = this._fitScaleForCurrent();
+                        const level = g && g.getZoomLevel ? g.getZoomLevel() : null;
+
+                        // If zoomed-in beyond fit, treat as panning => stop slideshow; otherwise assume swipe navigation
+                        if (fit && level && level > fit + 0.01) {
+                            this.stopSlideshow();
+                        }
+                    } catch (_) { /* ignore */ }
                 }
                 return;
             }
-            if (e && e.type === 'touchmove') { this.stopSlideshow(); return; }
-            // Stop on key interactions
-            if (e && e.type === 'keydown') { this.stopSlideshow(); return; }
+            // Remove touchmove stopping entirely - these are navigation gestures
         };
         this._boundUserStopHandler = stop.bind(this);
-        // Attach specific events: click (ignore on media), wheel (stop), drag moves (stop), keydown (stop)
+        // Attach specific events: click, pointermove (selective), keydown (selective)
+        // NOTE: wheel events removed - they should continue slideshow like other navigation
         root.addEventListener('click', this._boundUserStopHandler, { capture: true });
-        root.addEventListener('wheel', this._boundUserStopHandler, { capture: true });
         root.addEventListener('pointermove', this._boundUserStopHandler, { capture: true });
-        root.addEventListener('touchmove', this._boundUserStopHandler, { capture: true });
         window.addEventListener('keydown', this._boundUserStopHandler, { capture: true });
+        // Note: removed touchmove and wheel - they're navigation and should not stop slideshow
         this._userStopHandlersInstalled = true;
     },
 
@@ -1403,13 +2148,97 @@ window.photoSwipeHelpers = {
         const root = (this.currentGallery && this.currentGallery.template) || document;
         try {
             root.removeEventListener('click', this._boundUserStopHandler, { capture: true });
-            root.removeEventListener('wheel', this._boundUserStopHandler, { capture: true });
             root.removeEventListener('pointermove', this._boundUserStopHandler, { capture: true });
-            root.removeEventListener('touchmove', this._boundUserStopHandler, { capture: true });
             window.removeEventListener('keydown', this._boundUserStopHandler, { capture: true });
+            // Note: no touchmove or wheel to remove since we don't listen for them anymore
         } catch (e) {}
         this._boundUserStopHandler = null;
         this._userStopHandlersInstalled = false;
+    },
+
+    _installGlobalSpacebarHandler: function() {
+        if (this._globalSpacebarInstalled) return;
+
+        const spacebarHandler = (e) => {
+            // Only handle spacebar and only when PhotoSwipe is active
+            if (e.key === ' ' && this.currentGallery) {
+                e.preventDefault(); // Prevent page scrolling
+
+                const updateSlideshowButtonIcon = () => {
+                    // Find the slideshow button and update its icon
+                    const slideshowBtn = this.currentGallery.template.querySelector('.pswp__button--slideshow');
+                    if (slideshowBtn) {
+                        // Prefer FA <i> icon if present
+                        const iEl = slideshowBtn.querySelector('i');
+                        if (iEl) {
+                            try { iEl.classList.remove('fa-play'); iEl.classList.remove('fa-pause'); } catch(_) {}
+                            try { iEl.classList.remove('fas'); iEl.classList.add('fa'); } catch(_) {}
+                            iEl.classList.add(this.slideshowActive ? 'fa-pause' : 'fa-play');
+                        } else {
+                            const icon = slideshowBtn.querySelector('svg');
+                            if (icon) {
+                                while (icon.firstChild) icon.removeChild(icon.firstChild);
+                                if (this.slideshowActive) {
+                                    const pathPause1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                                    pathPause1.setAttribute('x', '6'); pathPause1.setAttribute('y', '5'); pathPause1.setAttribute('width', '4'); pathPause1.setAttribute('height', '14');
+                                    const pathPause2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                                    pathPause2.setAttribute('x', '14'); pathPause2.setAttribute('y', '5'); pathPause2.setAttribute('width', '4'); pathPause2.setAttribute('height', '14');
+                                    icon.appendChild(pathPause1); icon.appendChild(pathPause2);
+                                } else {
+                                    const pathPlay = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                                    pathPlay.setAttribute('d', 'M8 5v14l11-7z');
+                                    icon.appendChild(pathPlay);
+                                }
+                            }
+                        }
+
+                        // Update title and aria-label
+                        const startTitle = 'Start slideshow';
+                        const stopTitle = 'Stop slideshow';
+                        slideshowBtn.title = this.slideshowActive ? stopTitle : startTitle;
+                        slideshowBtn.setAttribute('aria-label', this.slideshowActive ? stopTitle : startTitle);
+                    }
+                };
+
+                if (this.slideshowActive) {
+                    this.stopSlideshow();
+                    // If we have a shared updater from injection, use it; else fallback
+                    if (typeof this._updateSlideshowButtonIcon === 'function') {
+                        try { this._updateSlideshowButtonIcon(); } catch(_) { updateSlideshowButtonIcon(); }
+                    } else {
+                        updateSlideshowButtonIcon();
+                    }
+                } else {
+                    // Start slideshow with default or saved interval
+                    let seconds = 5;
+                    try {
+                        const saved = localStorage.getItem('cd.slideshowSeconds');
+                        const n = parseInt(saved, 10);
+                        if (!isNaN(n) && n >= 1 && n <= 3600) seconds = n;
+                    } catch(_) {}
+                    this.startSlideshow(seconds);
+                    // Update immediately via shared updater if available, else local
+                    if (typeof this._updateSlideshowButtonIcon === 'function') {
+                        try { this._updateSlideshowButtonIcon(); } catch(_) { updateSlideshowButtonIcon(); }
+                    } else {
+                        updateSlideshowButtonIcon();
+                    }
+                }
+            }
+        };
+
+        this._boundGlobalSpacebarHandler = spacebarHandler.bind(this);
+        window.addEventListener('keydown', this._boundGlobalSpacebarHandler, { capture: true });
+        this._globalSpacebarInstalled = true;
+    },
+
+    _removeGlobalSpacebarHandler: function() {
+        if (!this._globalSpacebarInstalled) return;
+        try {
+            window.removeEventListener('keydown', this._boundGlobalSpacebarHandler, { capture: true });
+        } catch (e) {}
+        this._boundGlobalSpacebarHandler = null;
+        this._globalSpacebarInstalled = false;
     },
 
     // Get image size
@@ -1474,7 +2303,6 @@ window.photoSwipeHelpers = {
             }
 
             this._imgPatched = true;
-            console.log('[PhotoSwipe] Referrer policy patch applied to images');
         } catch (e) {
             console.warn('[PhotoSwipe] Failed to apply image referrer patch:', e.message);
         }
@@ -1492,7 +2320,6 @@ window.photoSwipeHelpers = {
                 Object.defineProperty(proto, 'srcset', this._imgSrcsetDescriptor);
             }
             this._imgPatched = false;
-            console.log('[PhotoSwipe] Referrer policy patch removed');
         } catch (e) {
             console.warn('[PhotoSwipe] Failed to remove image referrer patch:', e.message);
         }
@@ -1501,26 +2328,22 @@ window.photoSwipeHelpers = {
     // Load subtitles for a video element
     loadSubtitlesForVideo: async function(videoId, subtitleFiles) {
         if (!subtitleFiles || subtitleFiles.length === 0) {
-            console.log('[PhotoSwipe] No subtitle files to load for video:', videoId);
             return;
         }
 
         const videoElement = document.getElementById(videoId);
         if (!videoElement) {
-            console.warn('[PhotoSwipe] Video element not found:', videoId);
             return;
         }
 
         // Check if video element already has subtitle tracks loaded
         const existingTracks = videoElement.querySelectorAll('track');
         if (existingTracks.length > 0) {
-            console.log('[PhotoSwipe] Video already has', existingTracks.length, 'subtitle tracks loaded:', videoId);
             // Ensure first track is enabled
             if (videoElement.textTracks && videoElement.textTracks.length > 0) {
                 const firstTrack = videoElement.textTracks[0];
                 if (firstTrack.mode !== 'showing') {
                     firstTrack.mode = 'showing';
-                    console.log('[PhotoSwipe] Re-enabled first subtitle track');
                 }
             }
             // Mark as loaded for future reference
@@ -1528,20 +2351,14 @@ window.photoSwipeHelpers = {
             return;
         }
 
-        // If we've processed this video before but tracks are missing, reload them
-        if (this.loadedVideos.has(videoId)) {
-            console.log('[PhotoSwipe] Video was processed before but tracks are missing, reloading:', videoId);
-        }
 
         // Mark this video as being processed
         this.loadedVideos.add(videoId);
 
-        console.log('[PhotoSwipe] Loading subtitles for video:', videoId, 'Files:', subtitleFiles.length);
 
         // Remove existing track elements before adding new ones
         const currentTracks = videoElement.querySelectorAll('track');
         currentTracks.forEach(track => {
-            console.log('[PhotoSwipe] Removing existing track:', track.label || 'unlabeled');
             track.remove();
         });
 
@@ -1552,7 +2369,6 @@ window.photoSwipeHelpers = {
             const subtitle = subtitleFiles[i];
             
             try {
-                console.log('[PhotoSwipe] Processing subtitle:', subtitle.name);
                 
                 // Get file extension
                 const extension = subtitle.name.split('.').pop().toLowerCase();
@@ -1573,7 +2389,6 @@ window.photoSwipeHelpers = {
                             const vttContent = window.subtitleProxy.convertToWebVTT(content, extension);
                             if (vttContent.includes('WEBVTT')) {
                                 trackSrc = window.subtitleProxy.createBlobUrl(vttContent, 'text/vtt');
-                                console.log('[PhotoSwipe] Converted SRT to WebVTT for:', subtitle.name);
                             }
                         }
                     } catch (error) {
@@ -1591,19 +2406,13 @@ window.photoSwipeHelpers = {
                 // Set first track as default
                 if (successfullyLoaded === 0) {
                     trackElement.default = true;
-                    console.log('[PhotoSwipe] Set as default track:', trackElement.label);
                 }
-                
-                trackElement.addEventListener('load', function() {
-                    console.log('[PhotoSwipe] Track loaded successfully:', subtitle.name);
-                });
                 
                 trackElement.addEventListener('error', function(e) {
                     console.error('[PhotoSwipe] Track failed to load:', subtitle.name, e);
                 });
                 
                 videoElement.appendChild(trackElement);
-                console.log('[PhotoSwipe] Added subtitle track:', trackElement.label);
                 successfullyLoaded++;
                 
             } catch (error) {
@@ -1611,7 +2420,6 @@ window.photoSwipeHelpers = {
             }
         }
 
-        console.log('[PhotoSwipe] Successfully loaded', successfullyLoaded, 'subtitle tracks');
 
         // Enable first track if available
         if (successfullyLoaded > 0) {
@@ -1620,7 +2428,6 @@ window.photoSwipeHelpers = {
                     const firstTrack = videoElement.textTracks[0];
                     if (firstTrack.mode !== 'showing') {
                         firstTrack.mode = 'showing';
-                        console.log('[PhotoSwipe] Enabled first subtitle track');
                     }
                 }
             }, 100);
@@ -1671,7 +2478,6 @@ window.photoSwipeHelpers = {
                 
                 // Add wheel event listener
                 propertiesCard.addEventListener('wheel', this.handlePropertiesWheelEvent, { passive: false });
-                console.log('Properties panel wheel scroll enabled');
             }
         }, 100);
     },
@@ -1710,7 +2516,133 @@ window.photoSwipeHelpers = {
         const propertiesCard = document.querySelector('.overlay-properties .card');
         if (propertiesCard) {
             propertiesCard.removeEventListener('wheel', this.handlePropertiesWheelEvent);
-            console.log('Properties panel wheel scroll disabled');
+        }
+    },
+
+    // Stop all currently playing media (videos and audio)
+    stopAllMedia: function() {
+        try {
+            // Find all video and audio elements in the PhotoSwipe gallery
+            if (this.currentGallery && this.currentGallery.template) {
+                const mediaElements = this.currentGallery.template.querySelectorAll('video, audio');
+                mediaElements.forEach(media => {
+                    try {
+                        // Always pause media when stopping (e.g., before navigation) so previous videos don't continue playing
+                        if (!media.paused) {
+                            media.pause();
+                        }
+                        // Only reset playback position and remove autoplay when slideshow is not active
+                        if (!this.slideshowActive) {
+                            media.currentTime = 0;
+                            media.removeAttribute('autoplay');
+                        }
+                    } catch (e) {
+                        console.warn('[PhotoSwipe] Failed to pause media element:', e.message);
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('[PhotoSwipe] Error stopping media:', e.message);
+        }
+    },
+
+    // Prevent media autoplay during navigation
+    preventMediaAutoplay: function() {
+        try {
+            if (this.currentGallery && this.currentGallery.template) {
+                const mediaElements = this.currentGallery.template.querySelectorAll('video, audio');
+                mediaElements.forEach(media => {
+                    try {
+                        // Add event listeners to prevent autoplay
+                        const preventPlay = (e) => {
+                            // Do not prevent autoplay when slideshow is active; allow next/prev video to auto-play
+                            if (this._isNavigating && !this.slideshowActive) {
+                                // If this media has a temporary user-allow flag, let it play
+                                if (media.dataset && media.dataset.cdAllowPlay === '1') {
+                                    return;
+                                }
+                                e.preventDefault();
+                                e.stopPropagation();
+                                media.pause();
+                            }
+                        };
+                        
+                        // Remove existing listeners to avoid duplicates
+                        media.removeEventListener('play', preventPlay);
+                        media.removeEventListener('playing', preventPlay);
+                        
+                        // Add new listeners
+                        media.addEventListener('play', preventPlay);
+                        media.addEventListener('playing', preventPlay);
+                        
+                        // Store reference for cleanup
+                        media._cdPreventPlayHandler = preventPlay;
+                    } catch (e) {
+                        console.warn('[PhotoSwipe] Failed to add prevent play handler:', e.message);
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('[PhotoSwipe] Error preventing media autoplay:', e.message);
+        }
+    },
+
+    // Clean up media event listeners
+    cleanupMediaEventListeners: function() {
+        try {
+            if (this.currentGallery && this.currentGallery.template) {
+                const mediaElements = this.currentGallery.template.querySelectorAll('video, audio');
+                mediaElements.forEach(media => {
+                    try {
+                        if (media._cdPreventPlayHandler) {
+                            media.removeEventListener('play', media._cdPreventPlayHandler);
+                            media.removeEventListener('playing', media._cdPreventPlayHandler);
+                            delete media._cdPreventPlayHandler;
+                        }
+                    } catch (e) {
+                        console.warn('[PhotoSwipe] Failed to remove prevent play handler:', e.message);
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('[PhotoSwipe] Error cleaning up media event listeners:', e.message);
+        }
+    },
+
+    // Remove background click handler
+    _removeBackgroundClickHandler: function() {
+        try {
+            if (this.currentGallery && this.currentGallery._backgroundClickHandler && this.currentGallery._backgroundElements) {
+                const handler = this.currentGallery._backgroundClickHandler;
+                const elements = this.currentGallery._backgroundElements;
+                const dragHandlers = this.currentGallery._dragHandlers;
+
+                // Remove click listeners
+                elements.forEach(element => {
+                    if (element) {
+                        element.removeEventListener('click', handler);
+                    }
+                });
+
+                // Remove drag tracking listeners from template
+                if (dragHandlers && this.currentGallery.template) {
+                    const template = this.currentGallery.template;
+                    template.removeEventListener('pointerdown', dragHandlers.onPointerDown);
+                    template.removeEventListener('pointermove', dragHandlers.onPointerMove);
+                    template.removeEventListener('pointerup', dragHandlers.onPointerUp);
+                    template.removeEventListener('pointercancel', dragHandlers.onPointerUp);
+                    template.removeEventListener('touchstart', dragHandlers.onPointerDown);
+                    template.removeEventListener('touchmove', dragHandlers.onPointerMove);
+                    template.removeEventListener('touchend', dragHandlers.onPointerUp);
+                    template.removeEventListener('touchcancel', dragHandlers.onPointerUp);
+                }
+
+                this.currentGallery._backgroundClickHandler = null;
+                this.currentGallery._dragHandlers = null;
+                this.currentGallery._backgroundElements = null;
+            }
+        } catch (e) {
+            console.warn('[PhotoSwipe] Failed to remove background click handler:', e.message);
         }
     }
 };

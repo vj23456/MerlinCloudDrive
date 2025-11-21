@@ -8,6 +8,8 @@ window.addGlobalMouseEvents = (dotNetRef) => {
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
     document.addEventListener('selectstart', preventSelectStart);
 };
 
@@ -19,8 +21,25 @@ function handleMouseMove(e) {
     }
 }
 
+// Handle touch move during resize
+function handleTouchMove(e) {
+    if (isResizing && dotNetReference) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        dotNetReference.invokeMethodAsync('OnMouseMove', touch.clientY);
+    }
+}
+
 // Handle mouse up to stop resize
 function handleMouseUp(e) {
+    if (isResizing && dotNetReference) {
+        e.preventDefault();
+        dotNetReference.invokeMethodAsync('StopResize');
+    }
+}
+
+// Handle touch end to stop resize
+function handleTouchEnd(e) {
     if (isResizing && dotNetReference) {
         e.preventDefault();
         dotNetReference.invokeMethodAsync('StopResize');
@@ -53,6 +72,8 @@ window.stopSplitterResize = () => {
 window.cleanupSplitterEvents = () => {
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
     document.removeEventListener('selectstart', preventSelectStart);
     dotNetReference = null;
     isResizing = false;
@@ -68,6 +89,8 @@ window.addSplitterEventListeners = (dotNetRef) => {
     
     document.addEventListener('mousemove', handleFilesSplitterMove);
     document.addEventListener('mouseup', handleFilesSplitterUp);
+    document.addEventListener('touchmove', handleFilesSplitterTouchMove, { passive: false });
+    document.addEventListener('touchend', handleFilesSplitterTouchEnd);
     document.addEventListener('selectstart', preventFilesSelectStart);
     
     // Set cursor and prevent selection
@@ -80,6 +103,8 @@ window.addSplitterEventListeners = (dotNetRef) => {
 window.removeSplitterEventListeners = () => {
     document.removeEventListener('mousemove', handleFilesSplitterMove);
     document.removeEventListener('mouseup', handleFilesSplitterUp);
+    document.removeEventListener('touchmove', handleFilesSplitterTouchMove);
+    document.removeEventListener('touchend', handleFilesSplitterTouchEnd);
     document.removeEventListener('selectstart', preventFilesSelectStart);
     
     // Reset cursor and selection
@@ -97,8 +122,25 @@ function handleFilesSplitterMove(e) {
     }
 }
 
+// Handle touch move for files splitter
+function handleFilesSplitterTouchMove(e) {
+    if (isResizingFiles && filesSplitterDotNetRef) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        filesSplitterDotNetRef.invokeMethodAsync('OnSplitterMouseMove', touch.clientX);
+    }
+}
+
 // Handle mouse up for files splitter
 function handleFilesSplitterUp(e) {
+    if (isResizingFiles && filesSplitterDotNetRef) {
+        e.preventDefault();
+        filesSplitterDotNetRef.invokeMethodAsync('OnSplitterMouseUp');
+    }
+}
+
+// Handle touch end for files splitter
+function handleFilesSplitterTouchEnd(e) {
     if (isResizingFiles && filesSplitterDotNetRef) {
         e.preventDefault();
         filesSplitterDotNetRef.invokeMethodAsync('OnSplitterMouseUp');
