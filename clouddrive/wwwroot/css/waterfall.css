@@ -166,6 +166,8 @@
     color: white;
     padding: 16px 12px 12px;
     border-radius: 0 0 8px 8px;
+    /* Allow pointer events to pass through to child elements for tooltips */
+    pointer-events: none;
 }
 
 .waterfall-file-name {
@@ -174,6 +176,8 @@
     line-height: 1.2;
     margin-bottom: 4px;
     word-break: break-word;
+    /* Re-enable pointer events for tooltips */
+    pointer-events: auto;
 }
 
 .waterfall-file-info {
@@ -183,6 +187,8 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px;
+    /* Re-enable pointer events for tooltips */
+    pointer-events: auto;
 }
 
 /* Folder items in waterfall */
@@ -271,6 +277,8 @@
     color: white;
     font-size: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* Allow mouse events to pass through to elements below */
+    pointer-events: none;
 }
 
 /* Loading state styles */
@@ -544,6 +552,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    /* Re-enable pointer events for tooltips */
+    pointer-events: auto;
 }
 
 /* Dark theme loading indicator */

@@ -15923,6 +15923,8 @@ body[data-theme="dark"] .file-details div[b-nf2ltuiaoo] {
     font-size: 0.7rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 10;
+    /* Allow mouse events to pass through to elements below for tooltips */
+    pointer-events: none;
 }
 
 .file-selection[b-nf2ltuiaoo] {
@@ -18111,6 +18113,15 @@ video.viewer-media[b-nf2ltuiaoo]::-webkit-media-controls-time-remaining-display 
     background-color: rgba(var(--primary-color-rgb), 0.1);
 }
 
+/* Prevent long-press text selection on touch so selection mode does not trigger copy UI */
+@media (pointer: coarse) {
+    .files-page .file-name[b-nf2ltuiaoo],
+    .files-page .mobile-file-name[b-nf2ltuiaoo] {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}
+
 /* Compact details line - all in one row */
 .mobile-file-details[b-nf2ltuiaoo] {
     display: flex;
@@ -18315,18 +18326,37 @@ video.viewer-media[b-nf2ltuiaoo]::-webkit-media-controls-time-remaining-display 
         display: block !important;
         position: static !important;
         left: auto !important;
+        right: auto !important;
         top: auto !important;
         margin: 0 !important;
+        padding-left: 0.5rem !important;
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
         z-index: 1310 !important;
+        max-width: 100% !important;
     }
     
     /* Style submenu items for mobile inline display */
     .dropdown-submenu.dropdown-hover.show > .dropdown-menu .dropdown-item[b-nf2ltuiaoo] {
-        padding-left: 1.5rem; /* Indent submenu items slightly */
+        padding-left: 2rem; /* Indent submenu items more clearly */
         margin: 2px 0;
+        font-size: 0.875rem;
+    }
+    
+    /* Hide the arrow indicator on mobile since menus expand inline */
+    .dropdown-submenu.dropdown-hover > .dropdown-toggle[b-nf2ltuiaoo]::after {
+        content: "▼";
+        border: none;
+        width: auto;
+        height: auto;
+        margin-top: 0;
+        font-size: 0.7em;
+        margin-left: 0.5rem;
+    }
+    
+    .dropdown-submenu.dropdown-hover.show > .dropdown-toggle[b-nf2ltuiaoo]::after {
+        content: "▲";
     }
 }
 
@@ -18358,6 +18388,102 @@ video.viewer-media[b-nf2ltuiaoo]::-webkit-media-controls-time-remaining-display 
         background-color: var(--bs-dark);
         border-color: var(--bs-secondary);
         box-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Mobile-specific dropdown menu fixes */
+@media (max-width: 768px) {
+    /* Constrain overflow menu dropdown width on mobile */
+    #overflow-menu .dropdown-menu[b-nf2ltuiaoo] {
+        max-width: calc(100vw - 40px);
+        min-width: auto;
+        width: max-content;
+        right: 0;
+        left: auto;
+    }
+    
+    /* Prevent submenu items from being too wide */
+    .dropdown-submenu .dropdown-menu[b-nf2ltuiaoo] {
+        max-width: calc(100vw - 60px);
+    }
+    
+    /* Force submenu to display inline on mobile instead of to the right */
+    .dropdown-submenu.dropdown-hover .dropdown-menu[b-nf2ltuiaoo],
+    .dropdown-submenu .dropdown-menu[b-nf2ltuiaoo] {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        margin: 0 !important;
+        padding-left: 0.5rem !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        display: none;
+    }
+    
+    /* Show submenu when it has show class */
+    .dropdown-submenu.dropdown-hover.show > .dropdown-menu[b-nf2ltuiaoo],
+    .dropdown-submenu.show > .dropdown-menu[b-nf2ltuiaoo] {
+        display: block !important;
+    }
+    
+    /* Indent submenu items on mobile */
+    .dropdown-submenu .dropdown-menu .dropdown-item[b-nf2ltuiaoo] {
+        padding-left: 2rem !important;
+        font-size: 0.875rem;
+    }
+    
+    /* Change arrow indicator for mobile */
+    .dropdown-submenu > .dropdown-toggle[b-nf2ltuiaoo]::after {
+        content: "▼" !important;
+        border: none !important;
+        width: auto !important;
+        height: auto !important;
+        margin-top: 0 !important;
+        font-size: 0.7em !important;
+        margin-left: 0.5rem !important;
+        float: none !important;
+        margin-right: 0 !important;
+    }
+    
+    .dropdown-submenu.show > .dropdown-toggle[b-nf2ltuiaoo]::after {
+        content: "▲" !important;
+    }
+    
+    /* Ensure dropdown items wrap text if needed */
+    .dropdown-item[b-nf2ltuiaoo] {
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    
+    /* Make player icons and text fit better on mobile */
+    .dropdown-item img[b-nf2ltuiaoo] {
+        flex-shrink: 0;
+    }
+}
+
+/* Extra constraints for very small screens */
+@media (max-width: 480px) {
+    #overflow-menu .dropdown-menu[b-nf2ltuiaoo] {
+        max-width: calc(100vw - 20px);
+        right: 10px;
+    }
+    
+    .dropdown-submenu .dropdown-menu[b-nf2ltuiaoo] {
+        max-width: 100%;
+    }
+    
+    /* Reduce padding on very small screens */
+    .dropdown-item[b-nf2ltuiaoo] {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .dropdown-submenu.dropdown-hover.show > .dropdown-menu .dropdown-item[b-nf2ltuiaoo] {
+        padding-left: 1.5rem;
+        font-size: 0.8rem;
     }
 }
 
@@ -18672,7 +18798,7 @@ video.viewer-media[b-nf2ltuiaoo]::-webkit-media-controls-time-remaining-display 
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     padding: 40px;
     width: 100%;
-    max-width: 580px; /* Reduced from 800px to match login form without third-party section */
+    max-width: 800px; /* Reduced from 800px to match login form without third-party section */
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
 }
@@ -37846,6 +37972,7 @@ input:disabled + .slider[b-5nta226n1w]:before {
     padding: 2px 4px; /* Reduced padding for space efficiency */
     white-space: nowrap;
     display: inline-block; /* Changed from flex to inline-block */
+    cursor: pointer; /* Always show pointer cursor */
     /* No flex, no shrink - display text as-is */
 }
 
@@ -37916,6 +38043,7 @@ input:disabled + .slider[b-5nta226n1w]:before {
     opacity: 0.85;
     overflow: hidden; /* Ensure truncated text doesn't overflow */
     text-overflow: ellipsis; /* Show ellipsis if needed */
+    cursor: pointer !important; /* Always show pointer cursor, even with title */
 }
 
 .breadcrumb-item.truncated a:hover[b-s1tqyfix7q] {
