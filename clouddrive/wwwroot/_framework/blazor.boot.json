@@ -1,7 +1,7 @@
 {
   "entryAssembly": "CloudDriveModern",
   "resources": {
-    "hash": "sha256-yPlakEhEJIqUu/YFF8usV94YjPBcQpsGjb06fmEPEeI=",
+    "hash": "sha256-ggZcWVWJtTyaMeJtyDlbipYs6aNshOzYZ0b4BG3y6lo=",
     "runtime": {
       "dotnet.js": "sha256-eaJTmow4t8eE7FZMZR5Ja41JMOefGCbIYDTdpclGsac=",
       "dotnet.timezones.blat": "sha256-gbATD5HDsHYtW8vdPYh9iSBY4O5CjvMeCSF5xXWF1xo=",
@@ -209,11 +209,11 @@
       "mscorlib.dll": "sha256-HYyp9hO+GKFyupcEiY1PxtBBXbHzefsO3Q8RiQTaNCA=",
       "netstandard.dll": "sha256-N5CcC3sLzGBesbmeJAp5bwxABN9u7SwkIO5qfFjzoik=",
       "System.Private.CoreLib.dll": "sha256-bJS1DJmhjP7PvegYG+Z8O9EDtRY78HKinA3LUMVLlSQ=",
-      "CloudDriveModern.dll": "sha256-mLGxTAZUrVYOu4YxLjjTT/XMeMzBAU9KLQCkWJwqvdE="
+      "CloudDriveModern.dll": "sha256-z5c8t8vYefeWGEO9xD0fFkNgUAZ3EL/IhD4h0FD5vIA="
     },
     "satelliteResources": {
       "zh-CN": {
-        "zh-CN/CloudDriveModern.resources.dll": "sha256-St0dvp4JY1ji881c0iZ9Mgv4vCQt2Vvj52/XBDt4SR8="
+        "zh-CN/CloudDriveModern.resources.dll": "sha256-mNY9C4S3g4wIbwJn7T1lW+vA4D/tgMhsIJiE9WRUFGc="
       }
     },
     "runtimeAssets": {

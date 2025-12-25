@@ -38738,6 +38738,42 @@ select.form-control[b-wk08vb8yn1] {
         justify-content: center;
     }
 }
+
+/* Disk cache max file size with unit selector */
+.disk-cache-size-field[b-wk08vb8yn1] {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.disk-cache-unit-group[b-wk08vb8yn1] {
+    display: inline-flex;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+}
+
+.disk-cache-unit-btn[b-wk08vb8yn1] {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.disk-cache-unit-btn.active[b-wk08vb8yn1] {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.disk-cache-unit-btn:not(.active):hover[b-wk08vb8yn1] {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
 /* /Shared/ConfirmationModal.razor.rz.scp.css */
 /* Confirmation Modal Styles */
 .modal[b-4gik63zgbm] {
