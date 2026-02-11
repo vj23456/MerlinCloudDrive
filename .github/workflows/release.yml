@@ -81,7 +81,7 @@ jobs:
       run: |
         VERSION="${{ steps.get_version.outputs.version }}"
         mkdir -p clouddrive
-        echo "$VERSION" > clouddriveky/version
+        echo "$VERSION" > clouddrive/version
         echo "✅ clouddrive/version 已更新为 $VERSION"
     
     # 第三步：创建 tar.gz 压缩包
