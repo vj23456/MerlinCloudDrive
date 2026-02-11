@@ -1,0 +1,181 @@
+name: MerlinCloudDrive Release
+
+on:
+  push:
+    tags:
+      - 'v*.*'  # 匹配 v 开头的版本标签
+
+env:
+  PACKAGE_PREFIX: "MCloudDrive"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Get version from tag
+      id: get_version
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        VERSION="${TAG_NAME#v}"
+        
+        if [[ ! $VERSION =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+          echo "❌ 错误：无效的版本号格式 '$VERSION'"
+          exit 1
+        fi
+        
+        echo "✅ 版本号: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+    
+    - name: Validate project structure
+      run: |
+        echo "🔍 验证项目结构..."
+        if [ ! -f "config.json.js" ]; then echo "❌ config.json.js 不存在"; exit 1; fi
+        if [ ! -d "clouddrive" ]; then echo "❌ clouddrive 目录不存在"; exit 1; fi
+        echo "✅ 验证通过"
+    
+    - name: Extract changelog for version
+      id: extract_changelog
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        if [ ! -f "Changelog.txt" ]; then
+          echo "changelog=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        CHANGELOG_CONTENT=$(awk -v ver="$VERSION" '
+          /^[0-9]+\.[0-9]+\.[0-9]+$/ {if ($0==ver) {found=1; next}} 
+          found && /^[0-9]+\.[0-9]+\.[0-9]+$/ {found=0} 
+          found {print}
+        ' Changelog.txt)
+        CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed '/^[[:space:]]*$/d')
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    # 第一步：更新 config.json.js 中的 version 字段（暂不提交）
+    - name: Update version in config.json.js
+      id: update_version
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        echo "🔄 更新 config.json.js 中的 version 字段为 $VERSION"
+        sed -i.bak "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" config.json.js
+        # 验证更新
+        NEW_VER=$(grep -o '"version": "[^"]*"' config.json.js | cut -d'"' -f4)
+        if [ "$NEW_VER" != "$VERSION" ]; then
+          echo "❌ 版本更新失败"
+          exit 1
+        fi
+        echo "✅ version 已更新"
+    
+    # 第二步：更新 clouddrive/version 文件（暂不提交）
+    - name: Update clouddrive/version file
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        mkdir -p clouddrive
+        echo "$VERSION" > clouddriveky/version
+        echo "✅ clouddrive/version 已更新为 $VERSION"
+    
+    # 第三步：创建 tar.gz 压缩包
+    - name: Create tar.gz archive
+      id: create_archive
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        ARCHIVE_NAME="${PACKAGE_PREFIX}_v${VERSION}.tar.gz"
+        tar --exclude='.git*' --exclude='.github' --exclude='*.tar.gz' \
+            --exclude='*.backup' -czf "$ARCHIVE_NAME" clouddrive/
+        
+        # 计算 MD5 值（Linux md5sum 命令输出格式：md5sum filename）
+        MD5=$(md5sum "$ARCHIVE_NAME" | cut -d' ' -f1)
+        
+        echo "✅ 压缩包创建成功: $ARCHIVE_NAME"
+        echo "📊 MD5: $MD5"
+        echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+        echo "file_count=$(tar -tzf "$ARCHIVE_NAME" | wc -l)" >> $GITHUB_OUTPUT
+        echo "md5=$MD5" >> $GITHUB_OUTPUT
+    
+    # 第四步：更新 config.json.js 中的 md5 字段
+    - name: Update md5 in config.json.js
+      id: update_md5
+      run: |
+        MD5="${{ steps.create_archive.outputs.md5 }}"
+        echo "🔄 更新 config.json.js 中的 md5 字段为 $MD5"
+        
+        # 检查 config.json.js 中是否存在 md5 字段，如果不存在则添加
+        if grep -q '"md5":' config.json.js; then
+          sed -i.bak "s/\"md5\": \".*\"/\"md5\": \"$MD5\"/" config.json.js
+        else
+          # 在 version 行后添加 md5 行（简单处理，按需调整）
+          sed -i.bak "/\"version\":/a\  \"md5\": \"$MD5\"," config.json.js
+        fi
+        
+        # 验证更新
+        NEW_MD5=$(grep -o '"md5": "[^"]*"' config.json.js | cut -d'"' -f4)
+        if [ "$NEW_MD5" != "$MD5" ]; then
+          echo "❌ MD5 更新失败"
+          exit 1
+        fi
+        echo "✅ md5 已更新为 $MD5"
+    
+    # 第五步：提交所有更改到仓库
+    - name: Commit version and md5 updates
+      id: commit_updates
+      run: |
+        # 配置 git
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # 添加修改的文件
+        git add config.json.js clouddrive/version
+        
+        if git diff --cached --quiet; then
+          echo "⚠️ 没有需要提交的更改"
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "✅ 检测到以下更改："
+          git status --porcelain
+          COMMIT_MSG="chore: update version to ${{ steps.get_version.outputs.version }} and md5"
+          git commit -m "$COMMIT_MSG"
+          
+          # 推送到当前分支
+          CURRENT_BRANCH=$(git branch --show-current)
+          if [ -z "$CURRENT_BRANCH" ]; then
+            # detached HEAD 状态，推送到 main 分支
+            git push origin HEAD:main
+          else
+            git push origin HEAD:"$CURRENT_BRANCH"
+          fi
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
+    
+    # 第六步：创建 GitHub Release
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_version.outputs.tag_name }}
+        name: MerlinClouddrive v${{ steps.get_version.outputs.version }}
+        body: |
+          ### 📝 更新内容
+          ${{ steps.extract_changelog.outputs.changelog }}
+          
+          查看完整更新日志：**[Changelog.txt](https://github.com/${{ github.repository }}/blob/main/Changelog.txt)**
+        files: |
+          ${{ steps.create_archive.outputs.archive_name }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Cleanup
+      if: always()
+      run: rm -f config.json.js.bak clouddrive/version.backup 2>/dev/null || true
+    
+    - name: Success
+      if: success()
+      run: echo "🎉 发布成功！"

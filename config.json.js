@@ -7,5 +7,5 @@
     "module": "clouddrive", 
     "tags": "工具", 
     "title": "CloudDrive2", 
-    "version": "1.3.5"
+    "version": "1.3.4"
 }
