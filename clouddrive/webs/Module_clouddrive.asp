@@ -525,8 +525,9 @@ function validateInput(input, minValue, maxValue) {
 										<div style="margin: 10px 0 10px 5px;" class="splitLine"></div>
 										<div style="margin:10px 0 0 5px">
 											<li>1.如果需要挂载到本地，建议挂载到USB设备中，路径在<em>/tmp/mmt/</em>下的sda*文件夹!!!</li>
-											<li>2.若偶发出现，插件关闭后没有正常卸载掉挂载的目录，请ssh执行以下命令：</li>
-											<li>umount <em>挂载路径</em>，如 umount /tmp/mnt/sda1/clouddrive</li>
+											<li>2.若偶发出现，插件关闭后没有正常卸载掉挂载的目录，请ssh执行以下命令：</br>
+											umount <em>挂载路径</em>，如 umount /tmp/mnt/sda1/clouddrive</li>
+											<li>3.官改固件缺少fuse组件，无法使用本地挂载功能，梅改固件该功能正常。</br>
 											
 										</div>
 									</td>
