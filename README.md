@@ -6,10 +6,11 @@
 ## 二进制项目地址
 https://www.clouddrive2.com/index.html
 
-
 ## 机型支持
 
 在asuswrt为基础的固件上，插件目前支持HND和MTK和QCA架构的路由器
 
+# 注意
+由于官改固件无fuse组件，所以无法使用CloudDrive的本地挂载功能，梅改固件可正常使用。
 
 ---
