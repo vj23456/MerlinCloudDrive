@@ -121,18 +121,32 @@ start_clouddrive_process(){
 	if [ "${clouddrive_watchdog}" == "1" ]; then
 		echo_date "🟠启动 CloudDrive 进程，开启进程实时守护..."
 		mkdir -p /koolshare/perp/clouddrive
-		cat >/koolshare/perp/clouddrive/rc.main <<-EOF
-			#!/bin/sh
-			/koolshare/scripts/base.sh
-			export CLOUDDRIVE_HOME=/koolshare/clouddrive
-			CMD="/koolshare/clouddrive/clouddrive 1>$cd2Log  2>&1 &"
-			if test \${1} = 'start' ; then
-				exec >$cd2Log 2>&1
-				exec \$CMD
-			fi
-			exit 0
-
-		EOF
+		if [ "${clouddrive_safepath}" == "1" ]; then
+			cat >/koolshare/perp/clouddrive/rc.main <<-EOF
+				#!/bin/sh
+				/koolshare/scripts/base.sh
+				export CLOUDDRIVE_HOME=/koolshare/clouddrive
+				export LOCAL_ROOT_PATH=/tmp/mnt/
+				CMD="/koolshare/clouddrive/clouddrive 1>$cd2Log  2>&1 &"
+				if test \${1} = 'start' ; then
+					exec >$cd2Log 2>&1
+					exec \$CMD
+				fi
+				exit 0
+			EOF
+		else
+			cat >/koolshare/perp/clouddrive/rc.main <<-EOF
+				#!/bin/sh
+				/koolshare/scripts/base.sh
+				export CLOUDDRIVE_HOME=/koolshare/clouddrive
+				CMD="/koolshare/clouddrive/clouddrive 1>$cd2Log  2>&1 &"
+				if test \${1} = 'start' ; then
+					exec >$cd2Log 2>&1
+					exec \$CMD
+				fi
+				exit 0
+			EOF
+		fi
 		chmod +x /koolshare/perp/clouddrive/rc.main
 		chmod +t /koolshare/perp/clouddrive/
 		sync
@@ -143,6 +157,9 @@ start_clouddrive_process(){
 		echo_date "🟠启动 CloudDrive 进程..."
 		rm -rf /tmp/clouddrive.pid
 		export CLOUDDRIVE_HOME=/koolshare/clouddrive
+		if [ "${clouddrive_safepath}" == "1" ]; then
+			export LOCAL_ROOT_PATH=/tmp/mnt/
+		fi	
 		start-stop-daemon -S -q -b -m -p /tmp/var/clouddrive.pid -x /koolshare/clouddrive/clouddrive 1>$cd2Log  2>&1 &
 		sleep 2
 		detect_running_status clouddrive

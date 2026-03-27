@@ -19,50 +19,82 @@
         if (!isSupported()) return Promise.resolve(null);
         if (dbPromise) return dbPromise;
         dbPromise = new Promise((resolve, reject) => {
-            const req = indexedDB.open(DB_NAME, DB_VERSION);
-            req.onerror = () => reject(req.error);
+            let req;
+            try {
+                req = indexedDB.open(DB_NAME, DB_VERSION);
+            } catch (err) {
+                dbPromise = null;
+                reject(err);
+                return;
+            }
+            req.onerror = () => {
+                dbPromise = null; // Allow retry on next call
+                reject(req.error);
+            };
             req.onupgradeneeded = () => {
                 const db = req.result;
                 if (!db.objectStoreNames.contains(HANDLE_STORE)) {
                     db.createObjectStore(HANDLE_STORE, { keyPath: 'id' });
                 }
             };
-            req.onsuccess = () => resolve(req.result);
+            req.onsuccess = () => {
+                const db = req.result;
+                // If the browser closes the DB (versionchange, etc.), clear cache
+                db.onclose = () => { dbPromise = null; };
+                db.onversionchange = () => { db.close(); dbPromise = null; };
+                resolve(db);
+            };
         });
         return dbPromise;
     }
 
+    async function withRetry(fn) {
+        try {
+            return await fn();
+        } catch (err) {
+            // Connection may be stale — reopen and retry once
+            dbPromise = null;
+            return await fn();
+        }
+    }
+
     async function putHandle(id, handle) {
-        const db = await openDb();
-        if (!db) return;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(HANDLE_STORE, 'readwrite');
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-            tx.objectStore(HANDLE_STORE).put({ id, handle });
+        await withRetry(async () => {
+            const db = await openDb();
+            if (!db) return;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(HANDLE_STORE, 'readwrite');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+                tx.objectStore(HANDLE_STORE).put({ id, handle });
+            });
         });
     }
 
     async function getHandle(id) {
-        const db = await openDb();
-        if (!db) return null;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(HANDLE_STORE, 'readonly');
-            const req = tx.objectStore(HANDLE_STORE).get(id);
-            req.onsuccess = () => resolve(req.result ? req.result.handle : null);
-            req.onerror = () => reject(req.error);
-            tx.onerror = () => reject(tx.error);
+        return withRetry(async () => {
+            const db = await openDb();
+            if (!db) return null;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(HANDLE_STORE, 'readonly');
+                const req = tx.objectStore(HANDLE_STORE).get(id);
+                req.onsuccess = () => resolve(req.result ? req.result.handle : null);
+                req.onerror = () => reject(req.error);
+                tx.onerror = () => reject(tx.error);
+            });
         });
     }
 
     async function deleteHandle(id) {
-        const db = await openDb();
-        if (!db) return;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(HANDLE_STORE, 'readwrite');
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-            tx.objectStore(HANDLE_STORE).delete(id);
+        await withRetry(async () => {
+            const db = await openDb();
+            if (!db) return;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(HANDLE_STORE, 'readwrite');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+                tx.objectStore(HANDLE_STORE).delete(id);
+            });
         });
     }
 

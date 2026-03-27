@@ -114,15 +114,13 @@ i {
 	line-height:1.8;
 	visibility:hidden;
 }
-.pop_div_bg{
-}
+
 .QISform_wireless {
 	width:690px;
 	font-size:14px;
 	color:#FFFFFF;
 }
-#clouddrive_db_settings_div{
-}
+
 </style>
 <script type="text/javascript">
 var dbus = {};
@@ -132,7 +130,7 @@ var count_down;
 var _responseLen;
 var STATUS_FLAG;
 var noChange = 0;
-var params_check = ['clouddrive_watchdog'];
+var params_check = ['clouddrive_watchdog','clouddrive_safepath'];
 var params_input = [];
 
 String.prototype.myReplace = function(f, e){
@@ -364,14 +362,21 @@ function count_down_close() {
 		--count_down;
 	setTimeout("count_down_close();", 1000);
 }
-function open_alist_hint(itemNum) {
+function open_clouddrive_hint(itemNum) {
 	statusmenu = "";
 	width = "350px";
 	switch (itemNum) {
 		case 1:
 			width ="300";
-			statusmenu = "...";
-			_caption = "...";
+			statusmenu = "&nbsp;&nbsp;&nbsp;&nbsp;开启后限制工作路径在外挂设备目录/tmp/mnt下，防止误动路由重要文件；<br/><br/>";
+			statusmenu += "&nbsp;&nbsp;&nbsp;&nbsp;关闭后工作路径为/root，请谨慎操作。<br/>";
+			_caption = "安全工作路径";
+			return overlib(statusmenu, OFFSETX, 20, OFFSETY, -0, RIGHT, STICKY, WIDTH, 'width', CAPTION, _caption, CLOSETITLE, '');
+		break;
+		case 2:
+			width ="300";
+			statusmenu = "&nbsp;&nbsp;&nbsp;&nbsp;采用perp对进程进行实时进程守护，如果程序在你的路由器上运行良好，完全可以不使用进程守护。"
+			_caption = "实时进程守护";
 			return overlib(statusmenu, OFFSETX, 20, OFFSETY, -0, RIGHT, STICKY, WIDTH, 'width', CAPTION, _caption, CLOSETITLE, '');
 		break;
 
@@ -402,7 +407,7 @@ function mOver(obj, hint){
 		"color": "#00ffe4",
 		"text-decoration": "underline"
 	});
-	open_alist_hint(hint);
+	open_clouddrive_hint(hint);
 }
 function mOut(obj){
 	$(obj).css({
@@ -509,9 +514,15 @@ function validateInput(input, minValue, maxValue) {
 													</tr>
 												</thead>
 												<tr>
-													<th>实时进程守护</th>
+													<th><a onmouseover="mOver(this, 2)" onmouseout="mOut(this)" class="hintstyle" href="javascript:void(0);">实时进程守护</a></th>
 													<td>
 														<input type="checkbox" id="clouddrive_watchdog" style="vertical-align:middle;">
+													</td>
+												</tr>
+												<tr>
+													<th><a onmouseover="mOver(this, 1)" onmouseout="mOut(this)" class="hintstyle" href="javascript:void(0);">安全工作路径</a></th>
+													<td>
+														<input type="checkbox" id="clouddrive_safepath" style="vertical-align:middle;">
 													</td>
 												</tr>
 											</table>

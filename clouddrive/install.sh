@@ -156,6 +156,7 @@ install_now() {
 	# 检查插件默认dbus值
 	dbus_nset clouddrive_watchdog "0"
 	dbus_nset clouddrive_enable "0"
+	dbus_nset clouddrive_safepath "1"
 
 	# re_enable
 	if [ "${clouddrive_enable}" == "1" ];then

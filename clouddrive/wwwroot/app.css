@@ -52,6 +52,7 @@
     --bg-tertiary: #2C2C2E;
     --bg-card: #2C2C2E;
     --bg-file-container: #000000;
+    --bg-sidebar: #000000;
     --text-primary: #f8f9fa;
     --text-secondary: #98989F;
     --text-muted: #8E8E93;
@@ -66,6 +67,14 @@
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+/* Desktop dark: slightly gray backgrounds for sidebar and file browser */
+@media (min-width: 769px) {
+    [data-theme="dark"] {
+        --bg-sidebar: #161618;
+        --bg-file-container: #161618;
+    }
 }
 
 /* ---------- Reset ---------- */
@@ -275,7 +284,7 @@ html:not(.touch-device) .add-dropdown .context-menu-backdrop {
 /* ---------- Sidebar ---------- */
 .app-sidebar {
     width: var(--sidebar-width);
-    background: var(--bg-primary);
+    background: var(--bg-sidebar, var(--bg-primary));
     border-right: 1px solid var(--border);
     overflow: hidden;
     flex-shrink: 0;
@@ -551,7 +560,6 @@ i.tree-icon {
 
 .content-body {
     padding: 20px 24px;
-    max-width: 1400px;
 }
 
 /* ---------- Page Header ---------- */
@@ -623,7 +631,7 @@ i.tree-icon {
     border-color: var(--danger);
     color: #fff;
 }
-.btn-danger:hover { background: var(--danger); opacity: 0.9; }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 85%, #000); border-color: color-mix(in srgb, var(--danger) 85%, #000); }
 
 .btn-secondary {
     background: var(--bg-secondary);
@@ -729,7 +737,7 @@ i.tree-icon {
     line-height: 1;
 }
 .password-toggle-btn:hover { color: var(--text-primary); }
-.form-text-muted {
+.form-text-muted, .form-help {
     display: block;
     margin-top: 4px;
     font-size: 12px;
@@ -873,6 +881,10 @@ i.tree-icon {
 .string-list-input { max-width: 300px; }
 
 /* ---------- Dashboard ---------- */
+.dashboard-page {
+    max-width: 1800px;
+    margin: 0 auto;
+}
 .dashboard-header {
     text-align: center;
     margin-bottom: 2rem;
@@ -906,16 +918,21 @@ i.tree-icon {
 /* Function cards grid */
 .function-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
     margin-bottom: 2rem;
+}
+@media (min-width: 1100px) {
+    .function-cards {
+        grid-template-columns: repeat(7, 1fr);
+    }
 }
 .function-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 0.75rem;
     background: var(--bg-primary);
     border: 1px solid var(--border);
     border-radius: var(--border-radius-lg);
@@ -931,30 +948,30 @@ i.tree-icon {
     color: var(--text-primary);
 }
 .function-card .fc-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     color: #fff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 .function-card .fc-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     margin-bottom: 4px;
 }
 .function-card .fc-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     line-height: 1.4;
-    margin-bottom: 12px;
-    min-height: 34px;
+    margin-bottom: 10px;
+    min-height: 32px;
 }
 .function-card .fc-stat {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
 }
 .function-card .fc-label {
@@ -986,7 +1003,6 @@ i.tree-icon {
 /* Recent Files section */
 .recent-files-section {
     margin-top: 1.5rem;
-    max-width: 1400px;
 }
 .recent-files-header {
     display: flex;
@@ -1002,8 +1018,15 @@ i.tree-icon {
     align-items: center;
     gap: 0.5rem;
     margin: 0;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    padding: 2px 6px;
 }
+.recent-files-title:hover { background: var(--bg-secondary); }
+.recent-files-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .recent-files-title i { color: var(--text-secondary); font-size: 0.9rem; }
+.recent-files-title .section-toggle { font-size: 0.7rem; width: 0.8rem; text-align: center; }
 .recent-files-show-all {
     background: none;
     border: none;
@@ -1160,7 +1183,6 @@ i.tree-icon {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    max-width: 1400px;
     gap: 1.25rem;
     margin-top: 1rem;
 }
@@ -1289,10 +1311,8 @@ i.tree-icon {
     color: var(--text-primary);
 }
 
-.content-body:has(.dashboard-header) { max-width: none; }
-
 /* ---------- File Browser ---------- */
-.content-body:has(.files-page) { padding: 0; max-width: none; }
+.content-body:has(.files-page) { padding: 0; }
 .app-content:has(.files-page) { background: var(--bg-file-container, var(--bg-secondary)); }
 .files-page { display: flex; flex-direction: column; height: calc(100vh - var(--header-height)); background: var(--bg-file-container, var(--bg-secondary)); padding: 0 12px; }
 
@@ -3018,6 +3038,8 @@ i.tree-icon.fa-folder-open {
     justify-content: center;
     z-index: 1000;
     animation: fade-in 0.15s ease;
+    overflow-y: auto;
+    padding: 16px;
 }
 
 .modal-content {
@@ -3026,7 +3048,7 @@ i.tree-icon.fa-folder-open {
     box-shadow: var(--shadow-lg);
     width: 90%;
     max-width: 540px;
-    max-height: 85vh;
+    max-height: calc(100vh - 32px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -3118,7 +3140,7 @@ i.tree-icon.fa-folder-open {
     box-shadow: var(--shadow-lg);
     width: 90%;
     max-width: 540px;
-    max-height: 85vh;
+    max-height: calc(100vh - 32px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -3457,7 +3479,7 @@ i.tree-icon.fa-folder-open {
 }
 
 /* ---------- Tasks Page ---------- */
-.content-body:has(.tasks-page) { padding: 0; max-width: none; }
+.content-body:has(.tasks-page) { padding: 0; }
 .tasks-page {
     display: flex;
     flex-direction: column;
@@ -4771,14 +4793,14 @@ i.tree-icon.fa-folder-open {
     border-color: var(--success);
     color: #fff;
 }
-.btn-success:hover { opacity: 0.9; }
+.btn-success:hover { background: color-mix(in srgb, var(--success) 85%, #000); border-color: color-mix(in srgb, var(--success) 85%, #000); }
 
 .btn-warning {
     background: var(--warning);
     border-color: var(--warning);
     color: #000;
 }
-.btn-warning:hover { opacity: 0.9; }
+.btn-warning:hover { background: color-mix(in srgb, var(--warning) 85%, #000); border-color: color-mix(in srgb, var(--warning) 85%, #000); }
 
 /* ---------- WebDAV Page ---------- */
 .webdav-status-card {
@@ -6671,6 +6693,7 @@ i.tree-icon.fa-folder-open {
     pointer-events: none;
 }
 
+
 .folder-list-item .folder-icon {
     color: var(--folder-icon);
     font-size: 14px;
@@ -6867,6 +6890,16 @@ i.tree-icon.fa-folder-open {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.folder-select-warning {
+    width: 100%;
+    font-size: 0.8rem;
+    color: var(--warning, #e6a700);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
 }
 
 /* Footer left actions (create folder button) */
@@ -7074,6 +7107,7 @@ i.tree-icon.fa-folder-open {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 12px 20px;
     border-top: 1px solid var(--border);
@@ -7208,6 +7242,18 @@ i.tree-icon.fa-folder-open {
    JS (toggle_submenu) sets position:fixed + coordinates via inline styles. */
 .context-menu-submenu.open > .context-submenu-popup {
     display: block;
+}
+/* Transparent bridge strip on the right of an open submenu row.
+   This fills any pixel gap between the menu's right edge and the popup's
+   left edge so the mouse never crosses dead space that would fire mouseleave. */
+.context-menu-submenu.open::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -8px;
+    width: 8px;
+    height: 100%;
+    z-index: 2002;
 }
 
 /* ---------- Recovery Codes ---------- */
@@ -8255,6 +8301,7 @@ i.tree-icon.fa-folder-open {
     gap: 8px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-secondary);
+    flex-shrink: 0;
 }
 .wizard-step {
     display: flex;
@@ -8508,7 +8555,7 @@ i.tree-icon.fa-folder-open {
     width: 95vw;
 }
 .modal-lg > .modal-body {
-    min-height: 420px;
+    min-height: 0;
 }
 
 /* ---------- Balance Log Source ---------- */
@@ -9451,10 +9498,10 @@ i.tree-icon.fa-folder-open {
     }
     .context-menu-item { padding: 12px 16px; min-height: 44px; font-size: 15px; }
 
-    /* Modal — keep centered popup on mobile (same as desktop) */
+    /* Modal — keep centered popup on mobile */
     .modal-content, .modal-dialog {
         width: 92%;
-        max-height: 85vh;
+        max-height: calc(100vh - 32px);
     }
     .modal-folder-selector {
         height: 65vh;
