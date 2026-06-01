@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#1565C0"/>
+  <text x="32" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="13" fill="white">FTP</text>
+  <path d="M22 34 L32 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M32 34 L42 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M28 31 L22 34 L28 37" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M36 31 L42 34 L36 37" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M22 42 L32 42 L42 42" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="27" cy="42" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="37" cy="42" r="1.5" fill="white" opacity="0.5"/>
+</svg>

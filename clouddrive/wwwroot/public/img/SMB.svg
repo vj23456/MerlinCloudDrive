@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#E65100"/>
+  <text x="32" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="white">SMB</text>
+  <rect x="18" y="32" width="12" height="10" rx="2" stroke="white" stroke-width="2" fill="none"/>
+  <rect x="34" y="32" width="12" height="10" rx="2" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M30 37 L34 37" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M24 46 L24 48" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M40 46 L40 48" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M24 48 L40 48" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+</svg>
