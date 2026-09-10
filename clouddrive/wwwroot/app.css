@@ -225,6 +225,9 @@ html:not(.touch-device) .add-dropdown .context-menu-backdrop {
     min-width: 160px;
     z-index: 1001;
     padding: 4px 0;
+    /* A popup's length is the data's; never let it clip its own tail. */
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 .header-dropdown-item {
     display: flex;
@@ -1821,6 +1824,9 @@ i.tree-icon.fa-folder-open {
     box-shadow: var(--shadow-lg);
     padding: 4px 0;
     margin-top: 4px;
+    /* A popup's length is the data's; never let it clip its own tail. */
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 .uh-sort-option {
     display: flex;
@@ -5957,6 +5963,74 @@ i.tree-icon.fa-folder-open {
 
 .plan-card { position: relative; }
 
+/* "For CloudDrive2 App" chip on plan cards that grant the App-Pro entitlement
+   (App Pro, Ultimate Bundle). Placed right under the plan name so users see
+   at a glance that the SKU targets the mobile / desktop / VR CloudDrive2 App
+   family, not this Core management console. */
+.plan-scope-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 8px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    font-size: 0.72em;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+.plan-scope-chip i { font-size: 0.9em; }
+
+/* CloudDrive2 App ecosystem clarifier — sits above the plans grid whenever the
+   catalog includes an App-Pro plan. Sized like an alert-info sibling so it
+   feels informational, not promotional. */
+.app-ecosystem-notice {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border-radius: var(--border-radius);
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg-secondary, transparent));
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+}
+.app-ecosystem-notice-icon {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--primary) 18%, transparent);
+    color: var(--primary);
+    font-size: 1.05em;
+}
+.app-ecosystem-notice-body { flex: 1 1 auto; min-width: 0; }
+.app-ecosystem-notice-title {
+    margin: 0 0 4px;
+    font-size: 0.95em;
+    color: var(--text-primary, var(--text));
+}
+.app-ecosystem-notice-text {
+    margin: 0 0 10px;
+    font-size: 0.85em;
+    color: var(--text-secondary, var(--text-muted));
+    line-height: 1.5;
+}
+.app-ecosystem-notice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+@media (max-width: 520px) {
+    .app-ecosystem-notice { flex-direction: column; }
+    .app-ecosystem-notice-icon { align-self: flex-start; }
+}
+
 .plan-featured {
     border-color: #ffd700;
     box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.3);
@@ -6076,6 +6150,12 @@ i.tree-icon.fa-folder-open {
     background: var(--bg-tertiary);
     color: var(--text-muted);
     border: 1px solid var(--border-light);
+}
+/* The cross alone is loud. A feature the account does NOT have is what a reader
+   scans this list for, and in the muted grey the mark read as a dim tick at the
+   same weight as its own DISABLED label — which stays muted. */
+.feature-value-badge.disabled i {
+    color: var(--danger);
 }
 .feature-value-badge.filesize {
     background: rgba(13, 110, 253, 0.1);
@@ -6411,6 +6491,43 @@ i.tree-icon.fa-folder-open {
     background: var(--bg-secondary);
 }
 
+/* Destructive security card (delete account) — flagged in red so it reads as
+   distinct from the routine cards next to it. The focus ring is inherited from
+   the shared :focus-visible rules; only the colour changes here. */
+.security-card-danger-title {
+    color: var(--danger, #dc3545);
+}
+
+.security-card-disabled .security-card-danger-title {
+    color: var(--text-muted);
+}
+
+/* "What will be deleted" list inside the delete-account modal */
+.delete-account-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.delete-account-list li {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+    line-height: 1.45;
+}
+
+.delete-account-list li + li {
+    border-top: 1px solid var(--border-light);
+}
+
+.delete-account-list li i {
+    flex: 0 0 auto;
+    margin-top: 3px;
+    color: var(--text-muted);
+}
+
 .security-form {
     padding: 16px;
     border-top: 1px solid var(--border-light);
@@ -6738,6 +6855,21 @@ i.tree-icon.fa-folder-open {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Read-only marker on a non-selectable destination folder */
+.folder-entry-readonly-badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255, 193, 7, 0.2);
+    color: #8a6500;
+}
+[data-theme="dark"] .folder-entry-readonly-badge {
+    color: var(--warning);
 }
 
 /* Up-folder (..) item */
@@ -7206,6 +7338,9 @@ i.tree-icon.fa-folder-open {
     padding: 4px 0;
     z-index: 2001;
     animation: fade-in 0.1s ease;
+    /* A popup's length is the data's; never let it clip its own tail. */
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 
 .context-menu-item {
@@ -7265,6 +7400,9 @@ i.tree-icon.fa-folder-open {
     box-shadow: var(--shadow-lg);
     padding: 4px 0;
     z-index: 2002;
+    /* A popup's length is the data's; never let it clip its own tail. */
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 /* Submenu shown only via .open class (set by JS on click and mouseenter).
    No pure CSS :hover — JS handles positioning with position:fixed. */
@@ -9562,9 +9700,6 @@ i.tree-icon.fa-folder-open {
         font-size: 16px;
     }
 
-    /* Search icon: override filter funnel → magnifying glass */
-    .uh-filter-icon::before { content: "\f002" !important; font-family: "Font Awesome 5 Free" !important; font-weight: 900 !important; }
-
 
     /* Context menu as popup dropdown (same as desktop) */
     .context-menu {
@@ -9997,6 +10132,9 @@ i.tree-icon.fa-folder-open {
     min-width: 160px;
     z-index: 500;
     padding: 4px 0;
+    /* A popup's length is the data's; never let it clip its own tail. */
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
 }
 .dropdown-menu.show { display: block; }
 .dropdown-item {
@@ -11151,4 +11289,376 @@ button:focus-visible, .btn:focus-visible, a:focus-visible, input:focus-visible, 
 .cd-winfsp-banner .btn {
     flex: 0 0 auto;
     white-space: nowrap;
+}
+
+/* ── Media Scrape (Emby/Jellyfin/Plex/Kodi NFO + sidecar artwork) ──────── */
+.media-scrape-section {
+    margin: 12px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-subtle, var(--surface));
+}
+.media-scrape-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+}
+.media-scrape-header:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+.media-scrape-header > .media-scrape-title { flex: 1; }
+.media-scrape-header > i.fas:first-child { color: var(--accent); }
+.media-scrape-toggle { font-size: 0.9em; color: var(--text-secondary); }
+
+.media-scrape-body {
+    padding: 0 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.media-scrape-header-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.media-scrape-poster {
+    flex: 0 0 auto;
+    width: 120px;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--surface-muted, rgba(0,0,0,0.08));
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+@media (max-width: 480px) {
+    .media-scrape-header-row { flex-direction: column; align-items: stretch; }
+    .media-scrape-poster { width: 100%; max-width: 280px; }
+}
+.media-scrape-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.media-scrape-movie-title {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.25;
+}
+.media-scrape-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+.media-scrape-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+.media-scrape-rating { color: var(--warning); }
+.media-scrape-mpaa {
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.media-scrape-tagline {
+    margin: 4px 0 0;
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.92em;
+}
+.media-scrape-episode {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+.media-scrape-show-title { font-weight: 600; }
+
+.media-scrape-plot {
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: var(--text);
+}
+.media-scrape-plot > p {
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.media-scrape-plot.expanded > p {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+.media-scrape-show-more-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 0.85em;
+    padding: 4px 0;
+    cursor: pointer;
+}
+.media-scrape-show-more-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.media-scrape-list-label {
+    display: block;
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+.media-scrape-inline-list .media-scrape-inline-value {
+    font-size: 0.9em;
+    color: var(--text);
+}
+.media-scrape-chip-row .media-scrape-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.media-scrape-chip {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--surface-muted, rgba(0,0,0,0.08));
+    color: var(--text);
+    font-size: 0.82em;
+}
+.media-scrape-cast-track {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+.media-scrape-cast-card {
+    flex: 0 0 80px;
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border-radius: 6px;
+    background: transparent;
+    text-align: center;
+}
+.media-scrape-cast-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.media-scrape-cast-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light, var(--accent)) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+.media-scrape-cast-name {
+    font-size: 0.78em;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+.media-scrape-cast-role {
+    font-size: 0.72em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+.media-scrape-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.media-scrape-play-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--accent-fg, white);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+}
+.media-scrape-play-btn:hover { filter: brightness(1.08); }
+.media-scrape-play-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.media-scrape-trailer-btn,
+.media-scrape-extra-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-muted, rgba(0,0,0,0.06));
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+.media-scrape-trailer-btn:hover,
+.media-scrape-extra-row:hover {
+    background: var(--surface-hover, rgba(0,0,0,0.1));
+}
+.media-scrape-trailer-btn:focus-visible,
+.media-scrape-extra-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.media-scrape-extras { display: flex; flex-direction: column; gap: 6px; }
+.media-scrape-extras .media-scrape-extra-row { width: 100%; }
+
+/* ── Multi-gRPC-server feature ─────────────────────────────────── */
+
+/* Ambient current-server badge in the header. Clicks navigate to the
+   Servers page; in embedded mode the badge isn't rendered at all. */
+.header-current-server {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    margin-right: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1;
+    max-width: 200px;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.header-current-server:hover {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.header-current-server i { color: var(--accent); font-size: 11px; }
+.header-current-server__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+}
+@media (max-width: 768px) {
+    .header-current-server__name { display: none; }
+    .header-current-server { padding: 4px 8px; }
+}
+
+/* Page intro paragraph shared with other CRUD pages. */
+.page-description {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0 0 16px;
+    max-width: 720px;
+}
+
+/* Server cards on the management page. */
+.server-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+.server-card--current {
+    border-color: color-mix(in srgb, var(--success) 55%, var(--border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--success) 25%, transparent) inset;
+}
+.server-card__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.server-card__icon {
+    font-size: 22px;
+    color: var(--accent);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.server-card__title-wrap {
+    flex: 1;
+    min-width: 0;
+}
+.server-card__name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.server-card__url {
+    font-size: 12px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+.server-card__rename-input {
+    font-size: 15px;
+    padding: 4px 8px;
+    width: 100%;
+}
+.server-card__badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.server-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.server-card__actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Add-server modal form spacing matches other modals. */
+.add-server-form .form-group { margin-bottom: 12px; }
+.add-server-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+.add-server-form .form-help {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+.add-server-form .form-error {
+    color: var(--danger);
+    font-size: 13px;
+    margin: 4px 0 12px;
 }
