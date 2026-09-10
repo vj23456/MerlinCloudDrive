@@ -3,9 +3,9 @@
     "description": "一个强大的多云盘管理工具，为用户提供包含云盘本地挂载的一站式的多云盘解决方案", 
     "home_url": "Module_clouddrive.asp", 
     "link": "https://github.com/vj23456/MerlinCloudDrive", 
-    "md5": "53153927f885e91acb07141050f55710", 
+    "md5": "8efa7bf593b03e541ede991ab1e6ff21", 
     "module": "clouddrive", 
     "tags": "工具", 
     "title": "CloudDrive2", 
-    "version": "1.4.1"
+    "version": "1.4.2"
 }
